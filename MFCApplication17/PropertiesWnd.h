@@ -1,0 +1,72 @@
+﻿
+#pragma once
+
+class CPropertiesToolBar : public CMFCToolBar
+{
+public:
+	virtual void OnUpdateCmdUI(CFrameWnd* /*pTarget*/, BOOL bDisableIfNoHndler)
+	{
+		CMFCToolBar::OnUpdateCmdUI((CFrameWnd*) GetOwner(), bDisableIfNoHndler);
+	}
+
+	virtual BOOL AllowShowOnList() const { return FALSE; }
+};
+
+class CPropertiesWnd : public CDockablePane
+{
+// Construction
+public:
+	CPropertiesWnd() noexcept;
+
+	void AdjustLayout();
+
+// Attributes
+public:
+	void SetVSDotNetLook(BOOL bSet)
+	{
+		m_wndPropList.SetVSDotNetLook(bSet);
+		m_wndPropList.SetGroupNameFullWidth(bSet);
+	}
+
+protected:
+	CFont m_fntPropList;
+	CComboBox m_wndObjectCombo;
+	CPropertiesToolBar m_wndToolBar;
+	CMFCPropertyGridCtrl m_wndPropList;
+	CString m_currentStr;
+	CString* m_pSendStr1 = NULL;
+	CString* m_pSendStr2=NULL;
+	LPVOID m_pCurrentItem = NULL;
+	HWND m_classViewWnd = NULL;
+	int m_nCurrentType = 0;
+// Implementation
+public:
+	virtual ~CPropertiesWnd();
+	void SetClassViewWnd(HWND hwnd) { m_classViewWnd = hwnd; g_classViewWnd = hwnd; };
+protected:
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnExpandAllProperties();
+	afx_msg void OnUpdateExpandAllProperties(CCmdUI* pCmdUI);
+	afx_msg void OnSortProperties();
+	afx_msg void OnUpdateSortProperties(CCmdUI* pCmdUI);
+	afx_msg void OnProperties1();
+	afx_msg void OnUpdateProperties1(CCmdUI* pCmdUI);
+	afx_msg void OnProperties2();
+	afx_msg void OnUpdateProperties2(CCmdUI* pCmdUI);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
+
+	DECLARE_MESSAGE_MAP()
+
+	void InitPropList();
+	void SetPropListFont();
+
+	int m_nComboHeight;
+	afx_msg LRESULT OnPropertyChanged(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUserSelect(WPARAM wParam, LPARAM lParam);
+
+public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+};
+
