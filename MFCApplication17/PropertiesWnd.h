@@ -68,5 +68,7 @@ protected:
 
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+protected:
+	afx_msg LRESULT OnUserNotify(WPARAM wParam, LPARAM lParam);
 };
 

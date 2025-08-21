@@ -98,7 +98,9 @@ public:
 	afx_msg void OnHome();
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnShowpt();
-	afx_msg void OnButtonnewvariable();
+	afx_msg void OnButtonrun();
+	afx_msg void OnButtonpause();
+	afx_msg void OnFileSave();
 };
 
 #ifndef _DEBUG  // debug version in MFCApplication17View.cpp

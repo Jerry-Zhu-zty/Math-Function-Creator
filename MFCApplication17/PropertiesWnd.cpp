@@ -43,6 +43,7 @@ BEGIN_MESSAGE_MAP(CPropertiesWnd, CDockablePane)
 	ON_REGISTERED_MESSAGE(AFX_WM_PROPERTY_CHANGED, OnPropertyChanged)
 	ON_MESSAGE(WM_USER_SELECT, &CPropertiesWnd::OnUserSelect)
 	ON_WM_TIMER()
+	ON_MESSAGE(WM_USER_NOTIFY, &CPropertiesWnd::OnUserNotify)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -239,33 +240,33 @@ void CPropertiesWnd::InitPropList()
 
 	m_wndPropList.AddProperty(pGroup1);
 
-	CMFCPropertyGridProperty* pSize = new CMFCPropertyGridProperty(_T("Section"), 0, TRUE);
+	CMFCPropertyGridProperty* pSec = new CMFCPropertyGridProperty(_T("Section"), 0, TRUE);
 	if (m_pCurrentItem != NULL)
 	{
 		if (m_nCurrentType == 0)
 		{
 			pProp = new CMFCPropertyGridProperty(_T("Left"), (_variant_t)((CMathExpression*)m_pCurrentItem)->get_section()[0], _T("Specifies the window's height"));
 			pProp->EnableSpinControl(TRUE);
-			pSize->AddSubItem(pProp);
+			pSec->AddSubItem(pProp);
 
 			pProp = new CMFCPropertyGridProperty(_T("Right"), (_variant_t)((CMathExpression*)m_pCurrentItem)->get_section()[1], _T("Specifies the window's width"));
 			pProp->EnableSpinControl(TRUE);
-			pSize->AddSubItem(pProp);
-			m_wndPropList.AddProperty(pSize);
+			pSec->AddSubItem(pProp);
+			m_wndPropList.AddProperty(pSec);
 		}
 		else if (m_nCurrentType == 1)
 		{
 			pProp = new CMFCPropertyGridProperty(_T("Min"), (_variant_t)((CVariable*)m_pCurrentItem)->get_section()[0], _T("Specifies the window's height"));
 			pProp->EnableSpinControl(TRUE);
-			pSize->AddSubItem(pProp);
+			pSec->AddSubItem(pProp);
 
 			pProp = new CMFCPropertyGridProperty(_T("Max"), (_variant_t)((CVariable*)m_pCurrentItem)->get_section()[1], _T("Specifies the window's width"));
 			pProp->EnableSpinControl(TRUE);
-			pSize->AddSubItem(pProp);
-			m_wndPropList.AddProperty(pSize);
+			pSec->AddSubItem(pProp);
+			m_wndPropList.AddProperty(pSec);
 		}
 	}
-	pSize->Expand();
+	pSec->Expand();
 
 	/*CMFCPropertyGridProperty* pGroup2 = new CMFCPropertyGridProperty(_T("Font"));
 
@@ -621,4 +622,30 @@ void CPropertiesWnd::OnTimer(UINT_PTR nIDEvent)
 		}
 	}
 	CDockablePane::OnTimer(nIDEvent);
+}
+
+afx_msg LRESULT CPropertiesWnd::OnUserNotify(WPARAM wParam, LPARAM lParam)
+{
+	CMFCPropertyGridProperty* pGroup = m_wndPropList.GetProperty(0);
+	CMFCPropertyGridProperty* pProp = NULL;
+	for (auto& a : g_vVariable)
+	{
+		if (m_currentStr == CA2W(a.get_name().c_str()))
+		{
+			for (int i = 0; i < pGroup->GetSubItemsCount(); i++)
+			{
+				pProp = pGroup->GetSubItem(i);
+				CString str;
+				if ((str = pProp->GetName()) == L"Action")
+				{
+					if (a.is_change() == true)
+						pProp->SetValue(L"Run");
+					else if (a.is_change() == false)
+						pProp->SetValue(L"Pause");
+
+				}
+			}
+		}
+	}
+	return 0;
 }

@@ -13,6 +13,17 @@ protected:
 	string m_func;
 	vector<string> m_vExpression, m_vSolve;
 public:
+	CMathExpression() {
+		// Operator/function type mapping for fast lookup
+		m_map["+"] = 1; m_map["-"] = 1;
+		m_map["*"] = 2; m_map["/"] = 2;
+		m_map["^"] = 3;
+		m_map["("] = 4;
+		m_map[")"] = 5;
+		m_map["sin"] = 6; m_map["cos"] = 6; m_map["tan"] = 6;
+		m_map["pow"] = 6; m_map["log"] = 6;
+		m_vpVariable.reserve(100);
+	}
 	~CMathExpression()
 	{
 		for (auto& a : m_vpVariable)
@@ -190,17 +201,7 @@ public:
 	{
 		m_fSection[1] = max;
 	}
-	CMathExpression() {
-		// Operator/function type mapping for fast lookup
-		m_map["+"] = 1; m_map["-"] = 1;
-		m_map["*"] = 2; m_map["/"] = 2;
-		m_map["^"] = 3;
-		m_map["("] = 4;
-		m_map[")"] = 5;
-		m_map["sin"] = 6; m_map["cos"] = 6; m_map["tan"] = 6;
-		m_map["pow"] = 6; m_map["log"] = 6;
-		m_vpVariable.reserve(100);
-	}
+
 
 	bool are_all_digits(const string& str) const {
 		if (str == "x") return true; // treat "x" as a number

@@ -22,6 +22,7 @@
 #include "Variable.h"
 extern HWND g_viewHwnd;
 extern HWND g_classViewWnd;
+extern HWND g_propertiesViewWnd;
 #define WM_USER_NOTIFY WM_USER+1
 #define WM_USER_SELECT WM_USER+2
 #endif //PCH_H

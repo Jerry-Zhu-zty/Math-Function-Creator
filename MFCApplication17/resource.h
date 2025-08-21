@@ -77,13 +77,17 @@
 #define ID_BUTTON32772                  32772
 #define ID_SHOWPT                       32772
 #define ID_BUTTONNEWVARIABLE            32774
+#define ID_BUTTONRUN                    32774
+#define ID_BUTTON32778                  32778
+#define ID_BUTTONPAUSE                  32778
+#define ID_SAVE                         32779
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        312
-#define _APS_NEXT_COMMAND_VALUE         32775
+#define _APS_NEXT_COMMAND_VALUE         32780
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

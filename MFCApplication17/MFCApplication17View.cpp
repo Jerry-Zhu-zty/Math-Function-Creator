@@ -36,7 +36,9 @@ BEGIN_MESSAGE_MAP(CMFCApplication17View, CView)
 	ON_COMMAND(ID_HOME, &CMFCApplication17View::OnHome)
 	ON_WM_LBUTTONDOWN()
 	ON_COMMAND(ID_SHOWPT, &CMFCApplication17View::OnShowpt)
-	ON_COMMAND(ID_BUTTONNEWVARIABLE, &CMFCApplication17View::OnButtonnewvariable)
+	ON_COMMAND(ID_BUTTONRUN, &CMFCApplication17View::OnButtonrun)
+	ON_COMMAND(ID_BUTTONPAUSE, &CMFCApplication17View::OnButtonpause)
+	ON_COMMAND(ID_FILE_SAVE, &CMFCApplication17View::OnFileSave)
 END_MESSAGE_MAP()
 
 // CMFCApplication17View construction/destruction
@@ -290,7 +292,37 @@ void CMFCApplication17View::OnShowpt()
 }
 
 
-void CMFCApplication17View::OnButtonnewvariable()
+void CMFCApplication17View::OnButtonrun()
 {
+	for (auto& a : g_vVariable)
+	{
+		a.set_change(true);
+	}
+	::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
+	// TODO: Add your command handler code here
+}
+
+
+void CMFCApplication17View::OnButtonpause()
+{
+	for (auto& a : g_vVariable)
+	{
+		a.set_change(false);
+	}
+	::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
+	// TODO: Add your command handler code here
+}
+
+
+void CMFCApplication17View::OnFileSave()
+{
+
+	CString strFilter = _T("文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*||"); // 文件过滤器
+	CFileDialog fileDlg(FALSE, _T("txt"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, strFilter); // 创建文件对话框
+	if (fileDlg.DoModal() == IDOK) // 如果用户点击了“保存”按钮
+	{
+		CString strPath = fileDlg.GetPathName(); // 获取文件路径
+		 // 返回文件路径
+	}
 	// TODO: Add your command handler code here
 }

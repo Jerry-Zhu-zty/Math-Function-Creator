@@ -152,7 +152,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndProperties.EnableDocking(CBRS_ALIGN_ANY);
 	DockPane(&m_wndProperties);
 	m_wndProperties.SetClassViewWnd(m_wndClassView.GetSafeHwnd());
-
+	g_propertiesViewWnd = m_wndProperties.GetSafeHwnd();
 	// set the visual manager used to draw all user interface elements
 	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
 
