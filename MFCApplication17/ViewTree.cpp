@@ -52,14 +52,15 @@ void CViewTree::OnNMClick(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	// TODO: Add your control notification handler code here
 
-	CWnd* pWnd = GetParentFrame();
+	/*CWnd* pWnd = GetParentFrame();
 	HWND hParentWnd = pWnd->GetSafeHwnd();
 	CString strPropertiesWnd;
 	BOOL bNameValid = strPropertiesWnd.LoadString(IDS_PROPERTIES_WND);
 	ASSERT(bNameValid);
-	HWND hChildWnd = FindWindowEx(hParentWnd, NULL, NULL,strPropertiesWnd )->GetSafeHwnd();
+	HWND hChildWnd = FindWindowEx(hParentWnd, NULL, NULL,strPropertiesWnd )->GetSafeHwnd();*/
 	//HWND hPropertiesWnd = ::FindWindow(L"Properties", NULL);
-	if (hChildWnd != NULL)
+
+	if (g_propertiesViewWnd != NULL)
 	{
 		CPoint pt;
 		GetCursorPos(&pt);
@@ -79,7 +80,7 @@ void CViewTree::OnNMClick(NMHDR* pNMHDR, LRESULT* pResult)
 			{
 				if (CA2W(a.get_expression().c_str()) == (*m_pSelectStr))
 				{
-					::PostMessageW(hChildWnd, WM_USER_SELECT, (WPARAM)&a, (LPARAM)m_pSelectParentStr);
+					::PostMessageW(g_propertiesViewWnd, WM_USER_SELECT, (WPARAM)&a, (LPARAM)m_pSelectParentStr);
 				}
 			}
 		}
@@ -89,7 +90,7 @@ void CViewTree::OnNMClick(NMHDR* pNMHDR, LRESULT* pResult)
 			{
 				if (CA2W(a.get_name().c_str()) == (*m_pSelectStr))
 				{
-					::PostMessageW(hChildWnd, WM_USER_SELECT, (WPARAM)&a, (LPARAM)m_pSelectParentStr);
+					::PostMessageW(g_propertiesViewWnd, WM_USER_SELECT, (WPARAM)&a, (LPARAM)m_pSelectParentStr);
 				}
 			}
 		}

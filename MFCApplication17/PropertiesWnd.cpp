@@ -246,22 +246,22 @@ void CPropertiesWnd::InitPropList()
 		if (m_nCurrentType == 0)
 		{
 			pProp = new CMFCPropertyGridProperty(_T("Left"), (_variant_t)((CMathExpression*)m_pCurrentItem)->get_section()[0], _T("Specifies the window's height"));
-			pProp->EnableSpinControl(TRUE);
+			//pProp->EnableSpinControl(TRUE);
 			pSec->AddSubItem(pProp);
 
 			pProp = new CMFCPropertyGridProperty(_T("Right"), (_variant_t)((CMathExpression*)m_pCurrentItem)->get_section()[1], _T("Specifies the window's width"));
-			pProp->EnableSpinControl(TRUE);
+			//pProp->EnableSpinControl(TRUE);
 			pSec->AddSubItem(pProp);
 			m_wndPropList.AddProperty(pSec);
 		}
 		else if (m_nCurrentType == 1)
 		{
 			pProp = new CMFCPropertyGridProperty(_T("Min"), (_variant_t)((CVariable*)m_pCurrentItem)->get_section()[0], _T("Specifies the window's height"));
-			pProp->EnableSpinControl(TRUE);
+			//pProp->EnableSpinControl(TRUE);
 			pSec->AddSubItem(pProp);
 
 			pProp = new CMFCPropertyGridProperty(_T("Max"), (_variant_t)((CVariable*)m_pCurrentItem)->get_section()[1], _T("Specifies the window's width"));
-			pProp->EnableSpinControl(TRUE);
+			//pProp->EnableSpinControl(TRUE);
 			pSec->AddSubItem(pProp);
 			m_wndPropList.AddProperty(pSec);
 		}
@@ -352,6 +352,7 @@ void CPropertiesWnd::SetPropListFont()
 afx_msg LRESULT CPropertiesWnd::OnPropertyChanged(WPARAM wParam, LPARAM lParam)
 {
 	CMFCPropertyGridProperty* pProp = (CMFCPropertyGridProperty*)lParam;
+	if (pProp == NULL) { return NULL; }
 	CString name = pProp->GetName();
 	CString value = (CString)pProp->GetValue();
 	wstring wstr = value.GetString();
@@ -411,6 +412,11 @@ afx_msg LRESULT CPropertiesWnd::OnPropertyChanged(WPARAM wParam, LPARAM lParam)
 			if (name == L"Caption")
 			{
 				pVar->set_name(str);
+				for (auto& a : g_vMathExpression)
+				{
+					a.refresh();
+				}
+				m_currentStr = value;
 				::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
 			}
 			else if (name == L"Value")
@@ -552,9 +558,11 @@ afx_msg LRESULT CPropertiesWnd::OnUserSelect(WPARAM wParam, LPARAM lParam)
 		m_wndPropList.RemoveAll();
 		InitPropList();
 		pGroup = m_wndPropList.GetProperty(0);
+		if (pGroup == NULL) { return NULL; }
 		for (int i = 0; i < pGroup->GetSubItemsCount(); i++)
 		{
 			pProp = pGroup->GetSubItem(i);
+			if (pProp == NULL) { return NULL; }
 			if ((str = pProp->GetName()) == L"Caption")
 			{
 				
@@ -606,9 +614,11 @@ void CPropertiesWnd::OnTimer(UINT_PTR nIDEvent)
 				}
 				if (m_currentStr == CA2W(a.get_name().c_str()))
 				{
+					if (pGroup == NULL) { return; }
 					for (int i = 0; i < pGroup->GetSubItemsCount(); i++)
 					{
 						pProp = pGroup->GetSubItem(i);
+						if (pProp == NULL) { return; }
 						CString str;
 						if ((str=pProp->GetName()) == L"Value")
 						{
@@ -632,9 +642,11 @@ afx_msg LRESULT CPropertiesWnd::OnUserNotify(WPARAM wParam, LPARAM lParam)
 	{
 		if (m_currentStr == CA2W(a.get_name().c_str()))
 		{
+			if (pGroup == NULL) { return NULL; }
 			for (int i = 0; i < pGroup->GetSubItemsCount(); i++)
 			{
 				pProp = pGroup->GetSubItem(i);
+				if (pProp == NULL) { return NULL; }
 				CString str;
 				if ((str = pProp->GetName()) == L"Action")
 				{
