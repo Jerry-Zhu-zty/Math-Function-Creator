@@ -7,6 +7,7 @@
 #include "ClassView.h"
 #include "OutputWnd.h"
 #include "PropertiesWnd.h"
+#include "RichEditPane.h"
 
 class CMainFrame : public CMDIFrameWndEx
 {
@@ -42,7 +43,11 @@ protected:  // control bar embedded members
 	CClassView        m_wndClassView;
 	COutputWnd        m_wndOutput;
 	CPropertiesWnd    m_wndProperties;
-
+	
+	// handle MDI activation to update tool windows when active document/view changes
+	afx_msg void OnMDIActivate(BOOL bActivate, CWnd* pActivate, CWnd* pDeactivate);
+public:	
+	CRichEditPane     m_wndRichEditPane;
 // Generated message map functions
 protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

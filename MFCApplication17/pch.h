@@ -14,15 +14,24 @@
 #include <vector>
 #include <algorithm>
 #include <cctype>
-#include <math.h>
+#include <cmath>
 #include <unordered_map>
+#include <functional>
+#include <fstream>
+#include <chrono>
+#include <cassert>
+#include <thread>
+#include <mutex>
 #include "framework.h"
 #include "Coordinate.h"
 #include "MathExpression.h"
 #include "Variable.h"
+#include "Script.h"
 extern HWND g_viewHwnd;
 extern HWND g_classViewWnd;
 extern HWND g_propertiesViewWnd;
+extern mutex g_mtx;
+extern thread g_thread;
 #define WM_USER_NOTIFY WM_USER+1
 #define WM_USER_SELECT WM_USER+2
 #endif //PCH_H

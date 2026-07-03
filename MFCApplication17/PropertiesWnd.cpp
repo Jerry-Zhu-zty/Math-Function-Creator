@@ -144,6 +144,7 @@ void CPropertiesWnd::OnUpdateSortProperties(CCmdUI* pCmdUI)
 
 void CPropertiesWnd::OnProperties1()
 {
+	std::lock_guard<std::mutex> guard(g_mtx);
 	CString value = m_wndPropList.GetProperty(0)->GetSubItem(0)->GetValue();
 	int index = 0;
 	if (m_nCurrentType == 0)
@@ -188,6 +189,7 @@ void CPropertiesWnd::OnUpdateProperties1(CCmdUI* /*pCmdUI*/)
 
 void CPropertiesWnd::OnProperties2()
 {
+	std::lock_guard<std::mutex> guard(g_mtx);
 	CString value = m_wndPropList.GetProperty(0)->GetSubItem(0)->GetValue();
 	wstring wstr = value.GetString();
 	string str(wstr.begin(), wstr.end());
@@ -351,13 +353,14 @@ void CPropertiesWnd::SetPropListFont()
 
 afx_msg LRESULT CPropertiesWnd::OnPropertyChanged(WPARAM wParam, LPARAM lParam)
 {
+	std::lock_guard<std::mutex> guard(g_mtx);
 	CMFCPropertyGridProperty* pProp = (CMFCPropertyGridProperty*)lParam;
 	if (pProp == NULL) { return NULL; }
 	CString name = pProp->GetName();
 	CString value = (CString)pProp->GetValue();
 	wstring wstr = value.GetString();
 	string str(wstr.begin(),wstr.end());
-	HWND hwnd;
+	HWND hwnd = NULL;
 	CMathExpression* pMath=NULL;
 	CVariable* pVar=NULL;
 	switch (m_nCurrentType)
@@ -529,7 +532,7 @@ afx_msg LRESULT CPropertiesWnd::OnPropertyChanged(WPARAM wParam, LPARAM lParam)
 
 afx_msg LRESULT CPropertiesWnd::OnUserSelect(WPARAM wParam, LPARAM lParam)
 {
-
+	std::lock_guard<std::mutex> guard(g_mtx);
 	//TRACE(*(CString*)wParam);
 	CMFCPropertyGridProperty* pGroup=m_wndPropList.GetProperty(0);
 	CMFCPropertyGridProperty* pProp = NULL;
@@ -582,6 +585,7 @@ afx_msg LRESULT CPropertiesWnd::OnUserSelect(WPARAM wParam, LPARAM lParam)
 
 void CPropertiesWnd::OnTimer(UINT_PTR nIDEvent)
 {
+	std::lock_guard<std::mutex> guard(g_mtx);
 	// TODO: Add your message handler code here and/or call default
 	CMFCPropertyGridProperty* pGroup = m_wndPropList.GetProperty(0);
 	CMFCPropertyGridProperty* pProp = NULL;
@@ -636,6 +640,7 @@ void CPropertiesWnd::OnTimer(UINT_PTR nIDEvent)
 
 afx_msg LRESULT CPropertiesWnd::OnUserNotify(WPARAM wParam, LPARAM lParam)
 {
+	std::lock_guard<std::mutex> guard(g_mtx);
 	CMFCPropertyGridProperty* pGroup = m_wndPropList.GetProperty(0);
 	CMFCPropertyGridProperty* pProp = NULL;
 	for (auto& a : g_vVariable)
@@ -654,7 +659,7 @@ afx_msg LRESULT CPropertiesWnd::OnUserNotify(WPARAM wParam, LPARAM lParam)
 						pProp->SetValue(L"Run");
 					else if (a.is_change() == false)
 						pProp->SetValue(L"Pause");
-
+					//TODO:respond to the script message
 				}
 			}
 		}

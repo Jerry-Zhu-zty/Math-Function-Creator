@@ -22,6 +22,7 @@ const UINT uiLastUserToolBarId = uiFirstUserToolBarId + iMaxUserToolbars - 1;
 
 BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
 	ON_WM_CREATE()
+    ON_WM_MDIACTIVATE()
 	ON_COMMAND(ID_WINDOW_MANAGER, &CMainFrame::OnWindowManager)
 	ON_COMMAND(ID_VIEW_CUSTOMIZE, &CMainFrame::OnViewCustomize)
 	ON_REGISTERED_MESSAGE(AFX_WM_CREATETOOLBAR, &CMainFrame::OnToolbarCreateNew)
@@ -40,7 +41,7 @@ static UINT indicators[] =
 
 CMainFrame::CMainFrame() noexcept
 {
-	string str[30] = { /*"sin(x)","1/x","x^3",*/"a*x/b"};
+	string str[30] = { /*"sin(x)","1/x","x^3",*/"a*x/b" };
 	CVariable var;
 	var.set_name("a");
 	var.set_value(1);
@@ -59,6 +60,32 @@ CMainFrame::CMainFrame() noexcept
 			g_vMathExpression.push_back(exp);
 		}
 	}
+}
+void CMainFrame::OnMDIActivate(BOOL bActivate, CWnd* pActivate, CWnd* pDeactivate)
+{
+	CMDIFrameWndEx::OnMDIActivate(bActivate, pActivate, pDeactivate);
+	// When MDI child activation changes, notify properties window to refresh selection
+	// Determine active view's document data to send to PropertiesWnd via WM_USER_SELECT
+	if (bActivate && pActivate != nullptr)
+	{
+		CView* pView = nullptr;
+		if (pActivate->IsKindOf(RUNTIME_CLASS(CView)))
+			pView = (CView*)pActivate;
+		else
+		{
+			// try to find active view child
+			pView = (CView*)pActivate->GetDescendantWindow(TRUE);
+		}
+
+        // Notify class view and properties window to refresh for the newly activated document
+		::PostMessageW(m_wndClassView.GetSafeHwnd(), WM_USER_NOTIFY, NULL, NULL);
+		::PostMessageW(m_wndProperties.GetSafeHwnd(), WM_USER_NOTIFY, NULL, NULL);
+	}
+	else
+	{
+		::PostMessage(m_wndProperties.GetSafeHwnd(), WM_USER_NOTIFY, NULL, NULL);
+	}
+
 	// TODO: add member initialization code here
 }
 
@@ -256,6 +283,19 @@ BOOL CMainFrame::CreateDockingWindows()
 		TRACE0("Failed to create Properties window\n");
 		return FALSE; // failed to create
 	}
+
+	// Create rich edit docking pane
+	CString strRichEditWnd;
+	bNameValid = strRichEditWnd.LoadString(IDS_PROPERTIES_WND); // reuse string or add new resource if desired
+	if (!m_wndRichEditPane.Create(_T("Notes"), this, CRect(0,0,300,200), TRUE, ID_VIEW_FILEVIEW+10, WS_CHILD | WS_VISIBLE | CBRS_RIGHT | CBRS_FLOAT_MULTI))
+	{
+		TRACE0("Failed to create RichEdit window\n");
+		// continue without failing
+	}
+
+	// enable docking and dock the rich edit pane
+	m_wndRichEditPane.EnableDocking(CBRS_ALIGN_ANY);
+	DockPane(&m_wndRichEditPane);
 
 	SetDockingWindowIcons(theApp.m_bHiColorIcons);
 	return TRUE;

@@ -76,6 +76,7 @@ void CViewTree::OnNMClick(NMHDR* pNMHDR, LRESULT* pResult)
 		//SetItemState(GetSelectedItem(),0,TVIS_SELECTED);
 		if (*m_pSelectParentStr == "Function")
 		{
+			std::lock_guard<std::mutex> guard(g_mtx);
 			for (auto& a : g_vMathExpression)
 			{
 				if (CA2W(a.get_expression().c_str()) == (*m_pSelectStr))
@@ -86,6 +87,7 @@ void CViewTree::OnNMClick(NMHDR* pNMHDR, LRESULT* pResult)
 		}
 		else if (*m_pSelectParentStr == "Variable")
 		{
+			std::lock_guard<std::mutex> guard(g_mtx);
 			for (auto& a : g_vVariable)
 			{
 				if (CA2W(a.get_name().c_str()) == (*m_pSelectStr))

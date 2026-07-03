@@ -1,0 +1,16 @@
+( program
+	( write ( array_get math_exp 0 ) )
+	( let index 0 )
+    ( while ( exp index 5 < )
+        ( program ( array_set math_exp index ( exp ( convert STR index ) "*x" + ) )
+        ( let index ( exp index  1 + ) )
+        ( update )
+        )
+    )
+    ( while ( exp index 5 < )
+        ( program ( write ( array_get math_exp index ) )
+        ( let index ( exp index  1 + ) )
+        )
+    )
+
+)

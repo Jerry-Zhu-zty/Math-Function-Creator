@@ -23,48 +23,48 @@ public:
 	double m_dZoom=10;
 	CPoint m_lastMousePt;
 	BOOL m_bShowPt = true;
-public:
-	void DrawFunc(/*string func, */CDC* pDC)//disabled
-	{
-		string stmp;
-		POINT pt;
-		//RECT rect;
-		//int pos;
-		float fResult, fPreviousResult;
-		for (auto &a : g_vMathExpression)
-		{
-			for (int i = m_coordinate.GetBorder().left - m_nOffsetX; i < m_coordinate.GetBorder().right - m_nOffsetX; i++)
-			{
-				//stmp = func;
-				/*if (pos=stmp.find('x'))
-				{*/
-				//stmp.replace(pos, 1, "("+to_string(i * m_dZoom)+")");
-				fPreviousResult = a.result((i - 1) * m_dZoom);
-				fResult = a.result(i * m_dZoom);
-				/*fPreviousResult = m_math.result(stmp, (i - 1) * m_dZoom);
-				fResult = m_math.result(stmp, i * m_dZoom);*/
-				//rect.left = pt.x - 5;
-				//rect.right = pt.x + 5;
-				//rect.top = pt.y - 5;
-				//rect.bottom = pt.y + 5;
+//public:
+	//void DrawFunc(/*string func, */CDC* pDC)//disabled
+	//{
+	//	string stmp;
+	//	POINT pt;
+	//	//RECT rect;
+	//	//int pos;
+	//	float fResult, fPreviousResult;
+	//	for (auto &a : g_vMathExpression)
+	//	{
+	//		for (int i = m_coordinate.GetBorder().left - m_nOffsetX; i < m_coordinate.GetBorder().right - m_nOffsetX; i++)
+	//		{
+	//			//stmp = func;
+	//			/*if (pos=stmp.find('x'))
+	//			{*/
+	//			//stmp.replace(pos, 1, "("+to_string(i * m_dZoom)+")");
+	//			fPreviousResult = a.result((i - 1) * m_dZoom);
+	//			fResult = a.result(i * m_dZoom);
+	//			/*fPreviousResult = m_math.result(stmp, (i - 1) * m_dZoom);
+	//			fResult = m_math.result(stmp, i * m_dZoom);*/
+	//			//rect.left = pt.x - 5;
+	//			//rect.right = pt.x + 5;
+	//			//rect.top = pt.y - 5;
+	//			//rect.bottom = pt.y + 5;
 
-				if (!isnan((double)fResult) && !isinf((double)fResult))
-				{
-					pt.x = m_nOffsetX + i;
-					pt.y = m_nOffsetY + (-1)*fResult / m_dZoom;
+	//			if (!isnan((double)fResult) && !isinf((double)fResult))
+	//			{
+	//				pt.x = m_nOffsetX + i;
+	//				pt.y = m_nOffsetY + (-1)*fResult / m_dZoom;
 
-					if (i == m_coordinate.GetBorder().left - m_nOffsetX || isnan((double)fPreviousResult) || isinf((double)fPreviousResult))
-						pDC->MoveTo(pt);
-					else
-						pDC->LineTo(pt);
-					pDC->SetPixel(pt.x, pt.y, RGB(0, 0, 0));
+	//				if (i == m_coordinate.GetBorder().left - m_nOffsetX || isnan((double)fPreviousResult) || isinf((double)fPreviousResult))
+	//					pDC->MoveTo(pt);
+	//				else
+	//					pDC->LineTo(pt);
+	//				pDC->SetPixel(pt.x, pt.y, RGB(0, 0, 0));
 
-				}
-				//pDC->Ellipse(&rect);
-			//}
-			}
-		}
-	}
+	//			}
+	//			//pDC->Ellipse(&rect);
+	//		//}
+	//		}
+	//	}
+	//}
 // Overrides
 public:
 	virtual void OnDraw(CDC* pDC);  // overridden to draw this view

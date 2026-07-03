@@ -1,0 +1,12 @@
+( program
+	( write ( array_get math_exp 0 ) )
+	( let index 0 )
+    ( let num 0 )
+    ( while ( exp index 10 < )
+        ( program ( array_set variable_section_min 0 ( exp ( array_get variable_section_min 0 ) 1 - ) )
+        ( array_set variable_section_max 0 ( exp ( array_get variable_section_min 0 ) 1 + ) )
+        ( let index ( exp index 1 + ) )
+        ( update )
+        )
+    )
+)

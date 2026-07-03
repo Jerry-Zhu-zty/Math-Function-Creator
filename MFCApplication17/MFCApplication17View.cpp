@@ -12,6 +12,7 @@
 
 #include "MFCApplication17Doc.h"
 #include "MFCApplication17View.h"
+#include "MainFrm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -69,6 +70,7 @@ BOOL CMFCApplication17View::PreCreateWindow(CREATESTRUCT& cs)
 
 void CMFCApplication17View::OnDraw(CDC* pDC)
 {
+	std::lock_guard<std::mutex> guard(g_mtx);
 	g_viewHwnd = this->GetSafeHwnd();
 
 	CRect rc;
@@ -97,8 +99,14 @@ void CMFCApplication17View::OnDraw(CDC* pDC)
 	{
 		CPoint point, resPt;
 		CString str;
+		CPen penPoint;
+		penPoint.CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
+		CBrush brushPoint;
+		brushPoint.CreateSolidBrush(RGB(255, 0, 0));
 		::GetCursorPos(&point);
 		ScreenToClient(&point);
+		m_pMemoryDC->SelectObject(&brushPoint);
+		m_pMemoryDC->SelectObject(&penPoint);
 		for (auto a : g_vMathExpression)
 		{
 			resPt.x = point.x;
@@ -116,7 +124,10 @@ void CMFCApplication17View::OnDraw(CDC* pDC)
 	}
 	CPen oldPen;
 	oldPen.CreatePen(0, 1, RGB(0, 0, 0));
+	CBrush oldBrush;
+	oldBrush.CreateSolidBrush(RGB(255, 255, 255));
 	m_pMemoryDC->SelectObject(&oldPen);
+	m_pMemoryDC->SelectObject(&oldBrush);
 	//DrawFunc(m_pMemoryDC);
 	for_each(g_vMathExpression.begin(), g_vMathExpression.end(), 
 		[=](auto exp) {
@@ -294,17 +305,26 @@ void CMFCApplication17View::OnShowpt()
 
 void CMFCApplication17View::OnButtonrun()
 {
+
 	for (auto& a : g_vVariable)
 	{
 		a.set_change(true);
 	}
 	::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
+	CScriptEngine *pScript = new CScriptEngine();
+	g_thread = thread([&pScript]() {
+		pScript->Run("src.txt");
+		});
+	//script.Run("src.txt");
+	g_thread.detach();
+	::PostMessage(g_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
 	// TODO: Add your command handler code here
 }
 
 
 void CMFCApplication17View::OnButtonpause()
 {
+	std::lock_guard<std::mutex> guard(g_mtx);
 	for (auto& a : g_vVariable)
 	{
 		a.set_change(false);
@@ -322,7 +342,15 @@ void CMFCApplication17View::OnFileSave()
 	if (fileDlg.DoModal() == IDOK) // 如果用户点击了“保存”按钮
 	{
 		CString strPath = fileDlg.GetPathName(); // 获取文件路径
-		 // 返回文件路径
+		 // save content from the docked rich edit pane
+		CMainFrame* pFrame = dynamic_cast<CMainFrame*>(AfxGetMainWnd());
+		if (pFrame)
+		{
+			if (pFrame->m_wndRichEditPane.SaveFile(strPath))
+				AfxMessageBox(_T("Saved."));
+			else
+				AfxMessageBox(_T("Save failed."));
+		}
 	}
 	// TODO: Add your command handler code here
 }
