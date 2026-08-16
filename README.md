@@ -10,10 +10,9 @@
 
 ##  技术栈
 
-- C++
+- Visual C++
 - MFC (Microsoft Fundation Class)
 - Win32
-- Visual Studio
 
 ---
 
