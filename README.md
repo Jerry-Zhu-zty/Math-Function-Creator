@@ -11,7 +11,7 @@
 ##  技术栈
 
 - C++
-- MFC
+- MFC (Microsoft Fundation Class)
 - Win32
 - Visual Studio
 
