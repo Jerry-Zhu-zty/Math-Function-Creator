@@ -7,7 +7,7 @@
 - 绘制基本数学函数
 - 通过变量改变步长实现动画
 - 内置脚本执行引擎[miniscript](https://github.com/Jerry-Zhu-zty/Mini-script)，可定制函数动画
-- 
+  
 ## 效果展示
 ![example](./screenshots/example.png)
 ![help](./screenshots/help.png)
