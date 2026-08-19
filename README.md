@@ -46,7 +46,7 @@ MFCApplication17/
 - Windows 操作系统
 - Visual Studio 2019 或更高版本
 - 已安装 C++ 桌面开发工作负载
-- MFC 支持
+- 已安装C++ MFC for x64/x86组件
 
 ### 编译步骤
 
@@ -55,8 +55,6 @@ MFCApplication17/
 2. 选择合适的配置（例如 Debug / x64）
 3. 生成解决方案
 4. 运行生成出的可执行文件
-
-#### 请确保Visual Studio已安装C++ MFC for x64/x86组件
 ---
 
 ## 许可证
