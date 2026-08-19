@@ -318,7 +318,7 @@ void CScriptEngine::StatementWrite(NODE *pNode)
         CStringA str;
         str.Format("%s\n", a->pData->sValue.c_str());
         //MessageBoxA(NULL, str, "Info", MB_OK);
-        afxDump << str<<"\n";
+        //afxDump << str<<"\n";
     }
 }
 void CScriptEngine::StatementWhile(NODE *pNode)
@@ -344,7 +344,7 @@ void CScriptEngine::StatementLet(NODE *pNode)
 
     if (pNode->vpChild[1]->pData == NULL)
     {
-        afxDump << "Error: Expression has no result for variable "<<"\n";
+        //afxDump << "Error: Expression has no result for variable "<<"\n";
             //afxDump << varName << endl;
         return;
     }
@@ -582,7 +582,7 @@ void CScriptEngine::StatementArraySet(NODE *pNode)
                 // Enforce type check
                 if (v != it->eElemType)
                 {
-                    afxDump << "Error: Type mismatch assigning to array "<<"\n";
+                    //afxDump << "Error: Type mismatch assigning to array "<<"\n";
                     it->eElemType = v;
                     //afxDump << it->sName << endl;
                     //return;  TODO: Fix Type Detection
@@ -667,7 +667,7 @@ void CScriptEngine::StatementConvert(NODE *pNode)
     }
     else
     {
-        afxDump << "Error: Invalid target type for convert: "<<"\n";
+        //afxDump << "Error: Invalid target type for convert: "<<"\n";
             //afxDump << targetType << endl;
         return;
     }

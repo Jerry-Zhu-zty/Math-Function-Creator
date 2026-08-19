@@ -337,22 +337,22 @@ void CMFCApplication17View::OnButtonpause()
 
 void CMFCApplication17View::OnFileSave()
 {
-
-	CString strFilter = _T("文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*||"); // 文件过滤器
-	CFileDialog fileDlg(FALSE, _T("txt"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, strFilter); // 创建文件对话框
-	if (fileDlg.DoModal() == IDOK) // 如果用户点击了“保存”按钮
-	{
-		CString strPath = fileDlg.GetPathName(); // 获取文件路径
-		 // save content from the docked rich edit pane
-		CMainFrame* pFrame = dynamic_cast<CMainFrame*>(AfxGetMainWnd());
-		if (pFrame)
-		{
-			if (pFrame->m_wndRichEditPane.SaveFile(strPath))
-				AfxMessageBox(_T("Saved."));
-			else
-				AfxMessageBox(_T("Save failed."));
-		}
-	}
+	AfxMessageBox(L"unavailable now");
+	//CString strFilter = _T("文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*||"); // 文件过滤器
+	//CFileDialog fileDlg(FALSE, _T("txt"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, strFilter); // 创建文件对话框
+	//if (fileDlg.DoModal() == IDOK)
+	//{
+	//	CString strPath = fileDlg.GetPathName();
+	//	 // save content from the docked rich edit pane
+	//	CMainFrame* pFrame = dynamic_cast<CMainFrame*>(AfxGetMainWnd());
+	//	if (pFrame)
+	//	{
+	//		if (pFrame->m_wndRichEditPane.SaveFile(strPath))
+	//			AfxMessageBox(_T("Saved."));
+	//		else
+	//			AfxMessageBox(_T("Save failed."));
+	//	}
+	//}
 	// TODO: Add your command handler code here
 }
 
