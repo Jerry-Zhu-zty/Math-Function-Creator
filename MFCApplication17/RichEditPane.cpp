@@ -30,6 +30,7 @@ BEGIN_MESSAGE_MAP(CRichEditPane, CDockablePane)
     ON_BN_CLICKED(ID_EDIT_COPY, &CRichEditPane::OnEditCopy)
     ON_BN_CLICKED(ID_EDIT_CUT, &CRichEditPane::OnEditCut)
     ON_BN_CLICKED(ID_EDIT_PASTE, &CRichEditPane::OnEditPaste)
+    ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 CRichEditPane::CRichEditPane() noexcept
@@ -428,4 +429,12 @@ BOOL CRichEditPane::PreTranslateMessage(MSG* pMsg)
         }
     }
     return CDockablePane::PreTranslateMessage(pMsg);
+}
+
+void CRichEditPane::OnPaint()
+{
+    CPaintDC dc(this); // device context for painting
+    // TODO: Add your message handler code here
+    // Do not call CDockablePane::OnPaint() for painting messages
+    dc.TextOutW(500, 10, L"src.txt must be included in the same folder Unfinished ReadOnly!!!");
 }

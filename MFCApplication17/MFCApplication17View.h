@@ -101,6 +101,7 @@ public:
 	afx_msg void OnButtonrun();
 	afx_msg void OnButtonpause();
 	afx_msg void OnFileSave();
+	afx_msg void OnButtonrunscript();
 };
 
 #ifndef _DEBUG  // debug version in MFCApplication17View.cpp

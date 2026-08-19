@@ -676,7 +676,13 @@ void CScriptEngine::StatementConvert(NODE *pNode)
 void CScriptEngine::StatementUpdate(NODE* pNode)
 {
     UpdateInfo();
-    Sleep(1000);
+}
+void CScriptEngine::StatementSleep(NODE* pNode)
+{
+    if (pNode->vpChild.empty())
+        return;
+    Visit(pNode->vpChild[0]);
+    Sleep(stoi(pNode->vpChild[0]->pData->sValue));
 }
 void CScriptEngine::Visit(NODE *pNode)
 {
@@ -727,6 +733,9 @@ void CScriptEngine::Visit(NODE *pNode)
         break;
     case UPDATE:
         StatementUpdate(pNode);
+		break;
+	case SLEEP:
+		StatementSleep(pNode);
 		break;
     default:
         StatementUnknown(pNode);
@@ -949,6 +958,8 @@ void CScriptEngine::UpdateInfo()
             g_vVariable.push_back(var);
         }
     }
+
     ::PostMessage(g_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
     ::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
 }
+

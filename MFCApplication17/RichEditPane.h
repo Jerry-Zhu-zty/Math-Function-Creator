@@ -56,4 +56,6 @@ protected:
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     DECLARE_MESSAGE_MAP()
+public:
+    afx_msg void OnPaint();
 };

@@ -50,7 +50,8 @@ typedef enum e_ctrl
     ARRAYNEW = 12,
     ARRAYDEL = 13,
     CONVERT = 14,
-    UPDATE = 15
+    UPDATE = 15,
+    SLEEP =16
 } CTRLTYPE;
 
 #define OPERATIONNUM 11
@@ -113,6 +114,7 @@ private:
     void StatementArrayNew(NODE *pNode);
     void StatementArrayDel(NODE *pNode);
 	void StatementUpdate(NODE* pNode);
+    void StatementSleep(NODE* pNode);
     void PrintTree(NODE *pNode, int nDepth = 0);
     void ReadFile(string filename);
     void LoadInfo();

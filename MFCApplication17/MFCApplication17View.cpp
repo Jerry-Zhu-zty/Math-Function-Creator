@@ -40,6 +40,7 @@ BEGIN_MESSAGE_MAP(CMFCApplication17View, CView)
 	ON_COMMAND(ID_BUTTONRUN, &CMFCApplication17View::OnButtonrun)
 	ON_COMMAND(ID_BUTTONPAUSE, &CMFCApplication17View::OnButtonpause)
 	ON_COMMAND(ID_FILE_SAVE, &CMFCApplication17View::OnFileSave)
+	ON_COMMAND(ID_BUTTONRUNSCRIPT, &CMFCApplication17View::OnButtonrunscript)
 END_MESSAGE_MAP()
 
 // CMFCApplication17View construction/destruction
@@ -311,12 +312,12 @@ void CMFCApplication17View::OnButtonrun()
 		a.set_change(true);
 	}
 	::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
-	CScriptEngine *pScript = new CScriptEngine();
-	g_thread = thread([&pScript]() {
-		pScript->Run("src.txt");
-		});
-	//script.Run("src.txt");
-	g_thread.detach();
+	//CScriptEngine *pScript = new CScriptEngine();
+	//g_thread = thread([&pScript]() {
+	//	pScript->Run("src.txt");
+	//	});
+	////script.Run("src.txt");
+	//g_thread.detach();
 	::PostMessage(g_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
 	// TODO: Add your command handler code here
 }
@@ -352,5 +353,18 @@ void CMFCApplication17View::OnFileSave()
 				AfxMessageBox(_T("Save failed."));
 		}
 	}
+	// TODO: Add your command handler code here
+}
+
+void CMFCApplication17View::OnButtonrunscript()
+{
+	::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
+	CScriptEngine* pScript = new CScriptEngine();
+	g_thread = thread([&pScript]() {
+		pScript->Run("src.txt");
+		});
+	//script.Run("src.txt");
+	g_thread.detach();
+	::PostMessage(g_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
 	// TODO: Add your command handler code here
 }
