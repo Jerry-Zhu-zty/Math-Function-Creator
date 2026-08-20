@@ -162,6 +162,8 @@
 		<Unit filename="PropertiesWnd.h" />
 		<Unit filename="RichEditPane.cpp" />
 		<Unit filename="RichEditPane.h" />
+		<Unit filename="Script.cpp" />
+		<Unit filename="Script.h" />
 		<Unit filename="Variable.cpp" />
 		<Unit filename="Variable.h" />
 		<Unit filename="ViewTree.cpp" />
@@ -171,11 +173,7 @@
 		<Unit filename="pch.h" />
 		<Unit filename="res/MFCApplication17.rc2" />
 		<Unit filename="resource.h" />
-		<Unit filename="script.cpp" />
-		<Unit filename="script.h" />
 		<Unit filename="targetver.h" />
-		<Extensions>
-			<lib_finder disable_auto="1" />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

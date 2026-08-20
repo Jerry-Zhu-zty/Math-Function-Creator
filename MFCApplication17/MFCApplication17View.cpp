@@ -103,6 +103,8 @@ void CMFCApplication17View::OnDraw(CDC* pDC)
 		CPen penPoint;
 		penPoint.CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
 		CBrush brushPoint;
+		CBrush brushOld;
+		brushOld.CreateSolidBrush(RGB(255, 255, 255));
 		brushPoint.CreateSolidBrush(RGB(255, 0, 0));
 		::GetCursorPos(&point);
 		ScreenToClient(&point);

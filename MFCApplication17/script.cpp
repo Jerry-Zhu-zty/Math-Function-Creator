@@ -238,8 +238,10 @@ CTRLTYPE CScriptEngine::CheckCtrlType(string str)
         return ARRAYNEW;
     else if (str == "convert")
         return CONVERT;
-	else if (str == "update")
+    else if (str == "update")
         return UPDATE;
+    else if (str == "sleep")
+        return SLEEP;
     else
         return UNKNOWN;
 }
