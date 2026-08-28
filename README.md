@@ -1,22 +1,18 @@
 # Math Function Creator
 
-> 融合了脚本执行能力和数学表达式处理的数学函数可视化软件
+> 数学函数可视化软件⭐
 
-##  简介
+##  功能
 
-- 绘制基本数学函数
-- 通过变量改变步长实现动画
-- 内置脚本执行引擎[miniscript](https://github.com/Jerry-Zhu-zty/Mini-script)，可定制函数动画
+- [x] 绘制基本数学函数
+- [x] 绘制隐函数
+- [x] 通过变量改变步长实现动画
+- [x] 内置脚本执行引擎[miniscript](https://github.com/Jerry-Zhu-zty/Mini-script)，可定制函数动画
   
 ## 效果展示
+![implicit](./screenshots/implicit.png)
 ![example](./screenshots/example.png)
 ![help](./screenshots/help.png)
-
-##  技术栈
-
-- Visual C++
-- MFC (Microsoft Fundation Class)
-- Win32
 
 ---
 
@@ -38,15 +34,16 @@ MFCApplication17/
 ```
 
 ---
-
-##  如何运行
+## 如何运行
+- Windows中点击.exe文件即可运行程序。
+##  如何编译
 
 ### 环境要求
 
-- Windows 操作系统
+- Windows 7 或更高版本
 - Visual Studio 2019 或更高版本
 - 已安装 C++ 桌面开发工作负载
-- 已安装C++ MFC for x64/x86组件
+- 已安装 C++ MFC for x64/x86组件
 
 ### 编译步骤
 
@@ -58,4 +55,4 @@ MFCApplication17/
 ---
 
 ## 许可证
-GPL Version 2
+GPL-V2.0

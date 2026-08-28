@@ -4,9 +4,73 @@
 #include "Variable.h"
 using namespace std;
 #define INVALIDEXP NAN
+#define M_PI 3.14159265358979323846
 class CMathExpression;
 class CVariable;
 extern vector<CMathExpression> g_vMathExpression;
+struct CInterval
+{
+	float lo, hi;
+
+	CInterval(float _lo, float _hi) : lo(_lo), hi(_hi) {}
+
+	bool contains_zero() const
+	{
+		return lo <= 0 && 0 <= hi;
+	}
+
+	CInterval operator+(const CInterval& rhs) const
+	{
+		return CInterval(lo + rhs.lo, hi + rhs.hi);
+	}
+
+	CInterval operator-(const CInterval& rhs) const
+	{
+		return CInterval(lo - rhs.hi, hi - rhs.lo);
+	}
+
+	CInterval operator*(const CInterval& rhs) const
+	{
+		float values[4] = { lo * rhs.lo, lo * rhs.hi, hi * rhs.lo, hi * rhs.hi };
+		return CInterval(*min_element(values, values + 4), *max_element(values, values + 4));
+	}
+
+	CInterval operator/(const CInterval& rhs) const
+	{
+		if (rhs.contains_zero())
+			return CInterval(-numeric_limits<float>::infinity(), numeric_limits<float>::infinity());
+		return *this * CInterval(1.0f / rhs.hi, 1.0f / rhs.lo);
+	}
+
+	static CInterval sin(const CInterval& value)
+	{
+		if (!isfinite(value.lo) || !isfinite(value.hi) || value.hi - value.lo >= 2 * M_PI)
+			return CInterval(-1, 1);
+
+		float lo = min(::sin(value.lo), ::sin(value.hi));
+		float hi = max(::sin(value.lo), ::sin(value.hi));
+		long first_peak = static_cast<long>(ceil((value.lo - M_PI / 2) / M_PI));
+		long last_peak = static_cast<long>(floor((value.hi - M_PI / 2) / M_PI));
+		for (long k = first_peak; k <= last_peak; ++k)
+		{
+			if (k % 2 == 0)
+				hi = 1;
+			else
+				lo = -1;
+		}
+		return CInterval(lo, hi);
+	}
+
+	static CInterval cos(const CInterval& value)
+	{
+		return sin(CInterval(value.lo + M_PI / 2, value.hi + M_PI / 2));
+	}
+};
+struct Rect
+{
+	float lx, uy, rx, dy;
+	Rect(float _lx, float _uy, float _rx, float _dy) : lx(_lx), uy(_uy), rx(_rx), dy(_dy) {}
+};
 class CMathExpression 
 {
 protected:
@@ -32,6 +96,115 @@ public:
 		}
 		m_vpVariable.clear();
 	}
+	CInterval calculate_interval(const vector<string>& vExpression, CInterval x_range, CInterval y_range) const
+	{
+		stack<CInterval> stk;
+		for (const auto& token : vExpression)
+		{
+			int id = identify(token);
+			if (token == "x")
+				stk.push(x_range);
+			else if (token == "y")
+				stk.push(y_range);
+			else if (id == 0 || (token[0] == '-' && token.length() > 1))
+				stk.push(CInterval(stof(token), stof(token)));
+			else if (id >= 1 && id <= 3)
+			{
+				if (stk.size() < 2)
+					throw runtime_error("Invalid expression");
+				CInterval rhs = stk.top();
+				stk.pop();
+				CInterval lhs = stk.top();
+				stk.pop();
+				if (token == "+")
+					stk.push(lhs + rhs);
+				else if (token == "-")
+					stk.push(lhs - rhs);
+				else if (token == "*")
+					stk.push(lhs * rhs);
+				else if (token == "/")
+					stk.push(lhs / rhs);
+				else if (token == "^")
+				{
+					if (rhs.lo != rhs.hi || floor(rhs.lo) != rhs.lo)
+						stk.push(CInterval(-numeric_limits<float>::infinity(), numeric_limits<float>::infinity()));
+					else
+					{
+						int exponent = static_cast<int>(rhs.lo);
+						CInterval result(1, 1);
+						for (int i = 0; i < abs(exponent); ++i)
+							result = result * lhs;
+						if (exponent < 0)
+							result = CInterval(1, 1) / result;
+						stk.push(result);
+					}
+				}
+			}
+			else if (id == 6)
+			{
+				if (token == "sin" || token == "cos" || token == "tan")
+				{
+					if (stk.empty())
+						throw runtime_error("Invalid expression");
+					CInterval value = stk.top();
+					stk.pop();
+					if (token == "sin")
+						stk.push(CInterval::sin(value));
+					else if (token == "cos")
+						stk.push(CInterval::cos(value));
+					else
+						stk.push(CInterval(-1, 1));
+				}
+				else
+					throw runtime_error("Unsupported interval function");
+			}
+		}
+		if (stk.empty())
+			throw runtime_error("Invalid expression");
+		return stk.top();
+	}
+
+	bool contain_root(Rect scope, const vector<string>& vExpression)
+	{
+		CInterval value = calculate_interval(
+			vExpression,
+			CInterval(min(scope.lx, scope.rx), max(scope.lx, scope.rx)),
+			CInterval(min(scope.dy, scope.uy), max(scope.dy, scope.uy)));
+		return value.contains_zero();
+	}
+	void find_root(Rect scope, const vector<string>& vExpression, vector<pair<float, float>>& roots, int nDepth = 0,CDC*pDC=NULL,CCoordinate coordinate=CCoordinate())
+	{
+		if (nDepth > 10)
+			return;
+		if (!contain_root(scope, vExpression))
+			return;
+		float mid_x = (scope.lx + scope.rx) / 2.0f;
+		float mid_y = (scope.uy + scope.dy) / 2.0f;
+		Rect sub_rects[4] = {
+			Rect(scope.lx, scope.uy, mid_x, mid_y),
+			Rect(mid_x, scope.uy, scope.rx, mid_y),
+			Rect(scope.lx, mid_y, mid_x, scope.dy),
+			Rect(mid_x, mid_y, scope.rx, scope.dy) };
+		int nOffsetX = coordinate.GetZeroPt().x, nOffsetY = coordinate.GetZeroPt().y;
+		if (pDC != NULL)
+		{
+			for (auto a : sub_rects)
+			{
+				pDC->Rectangle(a.lx / coordinate.GetScale() + nOffsetX, a.uy * (-1) / coordinate.GetScale() + nOffsetY, a.rx / coordinate.GetScale() + nOffsetX, a.dy * (-1) / coordinate.GetScale() + nOffsetY);
+			}
+		}
+		for (const auto& sub_rect : sub_rects)
+		{
+			find_root(sub_rect, vExpression, roots, nDepth + 1, pDC, coordinate);
+		}
+		if (nDepth == 10)
+		{
+			float x_val = (scope.lx + scope.rx) / 2.0f;
+			float y_val = (scope.uy + scope.dy) / 2.0f;
+			roots.emplace_back(x_val, y_val);
+		}
+	}
+
 	void set_expression(string input)
 	{
 		m_func = input;
@@ -154,6 +327,48 @@ public:
 	//	}
 	//	return fResult;
 	//}
+	void implicit_result(string input,Rect scope,vector<pair<float, float>>& roots,CDC*pDC=NULL,CCoordinate coordinate=CCoordinate())
+	{
+		vector<string> vCopy;
+		m_func = input;
+		m_vExpression = slice(input);
+		vCopy = m_vExpression;
+		for (int i = 0; ; i++)
+		{
+			if (i >= m_vpVariable.size())
+			{
+				break;
+			}
+			if (m_vpVariable[i] != NULL)
+			{
+				if (!substitute(vCopy, m_vpVariable[i]->get_value(), m_vpVariable[i]->get_name()))
+				{
+					m_vpVariable.erase(m_vpVariable.begin() + i);
+				}
+			}
+			else
+			{
+				m_vpVariable.erase(m_vpVariable.begin() + i);
+			}
+		}
+		m_vSolve = solve(vCopy);
+
+		find_root(scope, m_vSolve, roots);
+	}
+	void draw_implicit_function(CDC* pDC,CCoordinate coordinate)
+	{
+		vector<pair<float, float>> vRoots;
+		int nOffsetX = coordinate.GetZeroPt().x, nOffsetY = coordinate.GetZeroPt().y;
+		float fZoom = coordinate.GetScale();
+		Rect scope((coordinate.GetBorder().left - nOffsetX)*fZoom, (coordinate.GetBorder().top - nOffsetY)*fZoom*(-1), (coordinate.GetBorder().right - nOffsetX) * fZoom, (coordinate.GetBorder().bottom - nOffsetY) * (-1)*fZoom);
+		implicit_result(m_func, scope, vRoots, pDC, coordinate);
+		//pDC->LineTo(nOffsetX + vRoots[0].first / fZoom, nOffsetY + (-1) * vRoots[0].second / fZoom);
+		for (auto a : vRoots)
+		{
+			pDC->SetPixel(nOffsetX + a.first / fZoom, nOffsetY + (-1) * a.second / fZoom, RGB(0, 0, 0));
+			//pDC->Ellipse(nOffsetX + a.first / fZoom - 10, nOffsetY + (-1) * a.second / fZoom - 10, nOffsetX + a.first / fZoom + 10, nOffsetY + (-1) * a.second / fZoom + 10);
+		}
+	}
 	void draw_function(CDC* pDC, CCoordinate coordinate)
 	{
 		POINT pt;
@@ -167,6 +382,7 @@ public:
 			/*if (pos=stmp.find('x'))
 			{*/
 			//stmp.replace(pos, 1, "("+to_string(i * fZoom)+")");
+			
 			fPreviousResult = result((i - 1) * fZoom);
 			fResult = result(i * fZoom);
 			/*fPreviousResult = m_math.result(stmp, (i - 1) * fZoom);

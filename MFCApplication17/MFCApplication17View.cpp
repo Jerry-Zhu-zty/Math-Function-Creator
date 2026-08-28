@@ -41,6 +41,7 @@ BEGIN_MESSAGE_MAP(CMFCApplication17View, CView)
 	ON_COMMAND(ID_BUTTONPAUSE, &CMFCApplication17View::OnButtonpause)
 	ON_COMMAND(ID_FILE_SAVE, &CMFCApplication17View::OnFileSave)
 	ON_COMMAND(ID_BUTTONRUNSCRIPT, &CMFCApplication17View::OnButtonrunscript)
+	ON_COMMAND(ID_BUTTONOPTION, &CMFCApplication17View::OnButtonoption)
 END_MESSAGE_MAP()
 
 // CMFCApplication17View construction/destruction
@@ -75,6 +76,12 @@ void CMFCApplication17View::OnDraw(CDC* pDC)
 	g_viewHwnd = this->GetSafeHwnd();
 
 	CRect rc;
+	CPoint point, resPt;
+	CString str;
+	CPen penPoint;
+	penPoint.CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
+	CBrush brushPoint;
+	brushPoint.CreateSolidBrush(RGB(255, 0, 0));
 	GetClientRect(&rc);
 	//pDC->SetWindowOrg(500, 500);
 	//pDC->Ellipse(-50, -50, 50, 50);
@@ -98,43 +105,46 @@ void CMFCApplication17View::OnDraw(CDC* pDC)
 	m_coordinate.DrawCoordinate(m_pMemoryDC);
 	if (m_bShowPt)
 	{
-		CPoint point, resPt;
-		CString str;
-		CPen penPoint;
-		penPoint.CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
-		CBrush brushPoint;
-		CBrush brushOld;
-		brushOld.CreateSolidBrush(RGB(255, 255, 255));
-		brushPoint.CreateSolidBrush(RGB(255, 0, 0));
+
 		::GetCursorPos(&point);
 		ScreenToClient(&point);
 		m_pMemoryDC->SelectObject(&brushPoint);
 		m_pMemoryDC->SelectObject(&penPoint);
-		for (auto a : g_vMathExpression)
+		if (g_bImplicit == false)
 		{
-			resPt.x = point.x;
-			if (!isnan(a.result((point.x - m_nOffsetX) * m_dZoom)))
+			for (auto a : g_vMathExpression)
 			{
-				resPt.y = m_nOffsetY + (-1) * (a.result((point.x - m_nOffsetX) * m_dZoom)) / m_dZoom;
-				if (!isnan((double)resPt.y) && !isinf((double)resPt.y))
+				resPt.x = point.x;
+				if (!isnan(a.result((point.x - m_nOffsetX) * m_dZoom)))
 				{
-					str.Format(L"%f,%f", (point.x - m_nOffsetX) * m_dZoom, (-1) * (resPt.y - m_nOffsetY) * m_dZoom);
-					m_pMemoryDC->TextOut(resPt.x + 20, resPt.y, str);
-					m_pMemoryDC->Ellipse(resPt.x - 5, resPt.y - 5, resPt.x + 5, resPt.y + 5);
+					resPt.y = m_nOffsetY + (-1) * (a.result((point.x - m_nOffsetX) * m_dZoom)) / m_dZoom;
+					if (!isnan((double)resPt.y) && !isinf((double)resPt.y))
+					{
+						str.Format(L"%f,%f", (point.x - m_nOffsetX) * m_dZoom, (-1) * (resPt.y - m_nOffsetY) * m_dZoom);
+						m_pMemoryDC->TextOut(resPt.x + 20, resPt.y, str);
+						m_pMemoryDC->Ellipse(resPt.x - 5, resPt.y - 5, resPt.x + 5, resPt.y + 5);
+					}
 				}
 			}
 		}
 	}
 	CPen oldPen;
-	oldPen.CreatePen(0, 1, RGB(0, 0, 0));
 	CBrush oldBrush;
 	oldBrush.CreateSolidBrush(RGB(255, 255, 255));
+	oldPen.CreatePen(0, 1, RGB(0, 0, 0));
 	m_pMemoryDC->SelectObject(&oldPen);
 	m_pMemoryDC->SelectObject(&oldBrush);
 	//DrawFunc(m_pMemoryDC);
 	for_each(g_vMathExpression.begin(), g_vMathExpression.end(), 
 		[=](auto exp) {
-			exp.draw_function(m_pMemoryDC,m_coordinate); 
+			if (g_bImplicit == false)
+			{
+				exp.draw_function(m_pMemoryDC, m_coordinate);
+			}
+			else
+			{
+				exp.draw_implicit_function(m_pMemoryDC, m_coordinate);
+			}
 		}
 	);
 	pDC->BitBlt(0, 0, rc.Width(), rc.Height(), m_pMemoryDC, 0, 0, SRCCOPY);
@@ -368,5 +378,12 @@ void CMFCApplication17View::OnButtonrunscript()
 	//script.Run("src.txt");
 	g_thread.detach();
 	::PostMessage(g_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
+	// TODO: Add your command handler code here
+}
+
+void CMFCApplication17View::OnButtonoption()
+{
+	COptionDlg dlg;
+	dlg.DoModal();
 	// TODO: Add your command handler code here
 }

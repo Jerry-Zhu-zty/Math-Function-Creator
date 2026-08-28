@@ -41,7 +41,7 @@ static UINT indicators[] =
 
 CMainFrame::CMainFrame() noexcept
 {
-	string str[30] = { /*"sin(x)","1/x","x^3",*/"a*x/b" };
+	string str[30] = { /*"sin(x)","1/x","x^3",*//*"a*x/b",*/"y^2-x" };
 	CVariable var;
 	var.set_name("a");
 	var.set_value(1);

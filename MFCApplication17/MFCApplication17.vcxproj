@@ -198,6 +198,7 @@
     <ClInclude Include="MFCApplication17.h" />
     <ClInclude Include="MFCApplication17Doc.h" />
     <ClInclude Include="MFCApplication17View.h" />
+    <ClInclude Include="OptionDlg.h" />
     <ClInclude Include="OutputWnd.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PropertiesWnd.h" />
@@ -218,6 +219,7 @@
     <ClCompile Include="MFCApplication17.cpp" />
     <ClCompile Include="MFCApplication17Doc.cpp" />
     <ClCompile Include="MFCApplication17View.cpp" />
+    <ClCompile Include="OptionDlg.cpp" />
     <ClCompile Include="OutputWnd.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

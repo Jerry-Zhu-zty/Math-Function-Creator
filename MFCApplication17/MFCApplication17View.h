@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#include"OptionDlg.h"
 class CMFCApplication17View : public CView
 {
 protected: // create from serialization only
@@ -102,6 +102,7 @@ public:
 	afx_msg void OnButtonpause();
 	afx_msg void OnFileSave();
 	afx_msg void OnButtonrunscript();
+	afx_msg void OnButtonoption();
 };
 
 #ifndef _DEBUG  // debug version in MFCApplication17View.cpp

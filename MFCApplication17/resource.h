@@ -72,7 +72,12 @@
 #define IDS_FIND_TAB                    302
 #define IDS_EXPLORER                    305
 #define IDS_EDIT_MENU                   306
+#define IDD_OPTION                      312
 #define IDC_MFCBUTTON1                  1000
+#define IDC_NORMALRADIO                 1003
+#define IDC_IMPLICITRADIO               1004
+#define IDC_NETADDRESS1                 1004
+#define IDC_MFCLINK1                    1005
 #define ID_HOME                         32771
 #define ID_BUTTON32772                  32772
 #define ID_SHOWPT                       32772
@@ -83,14 +88,15 @@
 #define ID_SAVE                         32779
 #define ID_BUTTON32780                  32780
 #define ID_BUTTONRUNSCRIPT              32780
+#define ID_BUTTONOPTION                 32784
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        312
-#define _APS_NEXT_COMMAND_VALUE         32781
-#define _APS_NEXT_CONTROL_VALUE         1003
+#define _APS_NEXT_RESOURCE_VALUE        315
+#define _APS_NEXT_COMMAND_VALUE         32785
+#define _APS_NEXT_CONTROL_VALUE         1006
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif
