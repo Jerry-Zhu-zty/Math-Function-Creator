@@ -10,8 +10,9 @@
 - [x] 内置脚本执行引擎[miniscript](https://github.com/Jerry-Zhu-zty/Mini-script)，可定制函数动画
   
 ## 效果展示
-![implicit](./screenshots/implicit.png)
 ![example](./screenshots/example.png)
+![implicit](./screenshots/implicit.png)
+![implicit](./screenshots/implicit2.png)
 ![help](./screenshots/help.png)
 
 ---
