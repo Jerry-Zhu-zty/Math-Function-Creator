@@ -960,7 +960,14 @@ void CScriptEngine::UpdateInfo()
             g_vVariable.push_back(var);
         }
     }
-
+    for (auto a : g_vMathExpression)
+    {
+        if (m_pDC != NULL)
+        {
+            a.draw_function(m_pDC, m_coordinate);
+        }
+    }
+    ::PostMessage(g_viewHwnd, WM_USER_NOTIFY, NULL, NULL);
     ::PostMessage(g_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
     ::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
 }

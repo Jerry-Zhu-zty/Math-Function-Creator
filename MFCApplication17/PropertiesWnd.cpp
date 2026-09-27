@@ -23,8 +23,6 @@ CPropertiesWnd::CPropertiesWnd() noexcept
 
 CPropertiesWnd::~CPropertiesWnd()
 {
-	delete m_pSendStr1;
-	delete m_pSendStr2;
 }
 
 BEGIN_MESSAGE_MAP(CPropertiesWnd, CDockablePane)
@@ -228,7 +226,7 @@ void CPropertiesWnd::InitPropList()
 			pGroup1->AddSubItem(new CMFCPropertyGridProperty(_T("Caption"), (_variant_t)/*_T("About")*/m_currentStr, _T("Write a math function here")));
 
 			//pGroup1->AddSubItem(new CMFCPropertyGridColorProperty(_T("Color"), RGB(0, 0, 0), NULL, _T("Color of function")));
-			CMFCPropertyGridColorProperty* pColorProp = new CMFCPropertyGridColorProperty(_T("Color"), RGB(0, 0, 0), NULL, _T("Color of function"));
+			CMFCPropertyGridColorProperty* pColorProp = new CMFCPropertyGridColorProperty(_T("Color"), (_variant_t)((CMathExpression*)m_pCurrentItem)->get_color(), NULL, _T("Color of function"));
 			pColorProp->EnableOtherButton(_T("Other..."));
 			pColorProp->EnableAutomaticButton(_T("Default"), RGB(0, 0, 0));
 			pGroup1->AddSubItem(pColorProp);
@@ -411,13 +409,22 @@ afx_msg LRESULT CPropertiesWnd::OnPropertyChanged(WPARAM wParam, LPARAM lParam)
 				m_currentStr = CA2W(str.c_str());
 				::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
 			}
-		else if (name == L"Color")
-		{
-			long lcol = 0;
-			COleVariant var = pProp->GetValue();
-			try { var.ChangeType(VT_I4); lcol = var.lVal; } catch(...) { lcol = 0; }
-			pMath->set_color((COLORREF)lcol);
-		}
+			else if (name == L"Color")
+			{
+				long lcol = 0;
+				COleVariant var = pProp->GetValue();
+				try { var.ChangeType(VT_I4); lcol = var.lVal; }
+				catch (...) { lcol = 0; }
+				pMath->set_color((COLORREF)lcol);
+			}
+			else if (name == L"Left")
+			{
+				pMath->set_section_min(stof(str));
+			}
+			else if (name == L"Right")
+			{
+				pMath->set_section_max(stof(str));
+			}
 	}
 	}
 	else if (m_nCurrentType == 1)
@@ -463,80 +470,7 @@ afx_msg LRESULT CPropertiesWnd::OnPropertyChanged(WPARAM wParam, LPARAM lParam)
 			}
 		}
 	}
-	//if (name == L"Caption")
-//{
-//	if (m_nCurrentType == 0)
-//	{
-//		//for (auto& a : g_vMathExpression)
-//		//{
-//		//	if (CA2W(a.get_expression().c_str()) == m_currentStr)
-//		//	{
-//		//		math.set_expression(str);
-//		//		/*if (isnan(math.result(0))) {
-//		//			AfxMessageBox(L"type error");
-//		//		}
-//		//		else {*/
-//		//		a.set_expression(str);
-//		//		m_currentStr = CA2W(str.c_str());
-//		//		//}
-//		//		break;
-//		//	}
-//		//}
-//		if(pMath!=NULL)pMath->set_expression(str);
-//		m_currentStr = CA2W(str.c_str());
-//	}
-//	else if (m_nCurrentType == 1)
-//	{
-//		/*for (auto& a : g_vVariable)
-//		{
-//			if (CA2W(a.get_name().c_str()) == m_currentStr)
-//			{
-//				a.set_name(str);
-//				break;
-//			}
-//		}*/
-//		if (pVar != NULL)
-//		{
-//			pVar->set_name(str);
-//		}
-//	}
-//	
-//	if (m_pSendStr1 != NULL)
-//		delete m_pSendStr1;
-//	if (m_pSendStr2 != NULL)
-//		delete m_pSendStr2;
-//	m_pSendStr1 = new CString(name);
-//	m_pSendStr2 = new CString(value);
-//	//CWnd* pWnd = GetParentFrame();
-//	/*HWND hParentWnd = pWnd->GetSafeHwnd();
-//	CString strClassViewWnd;
-//	BOOL bNameValid = strClassViewWnd.LoadString(IDB_CLASS_VIEW);
-//	ASSERT(bNameValid);
-//	HWND hChildWnndPropList.RemoveAll();d = FindWindowEx(hParentWnd, NULL, NULL, strClassViewWnd)->GetSafeHwnd();
-//	::PostMessage(hChildWnd, WM_USER_SELECT,(WPARAM)m_pSendStr1, (LPARAM)m_pSendStr2);*/
-//	::PostMessage(m_classViewWnd, WM_USER_NOTIFY, (WPARAM)m_pSendStr1, (LPARAM)m_pSendStr2);
-//}
-//else if (name == L"Value")
-//{
-//		/*for (auto& a : g_vVariable)
-//		{
-//			if (CA2W(a.get_name().c_str()) == m_currentStr)
-//			{
-//				a.set_value(stof(str));
-//				break;
-//			}
-//		}*/
-//	if (pVar != NULL)
-//	{
-//		pVar->set_value(stof(str));
-//	}
-//		//hwnd = ((CFrameWnd*)(AfxGetApp()->m_pMainWnd))->GetActiveView()->GetSafeHwnd();
-//		//if (hwnd != NULL)
-//		//{
-//		//}
-//}
-//
-	::PostMessage(g_viewHwnd, WM_USER_NOTIFY, (WPARAM)m_pSendStr1, (LPARAM)m_pSendStr2);
+	::PostMessage(g_viewHwnd, WM_USER_NOTIFY, NULL, NULL);
 	return 0;
 }
 
@@ -602,9 +536,6 @@ afx_msg LRESULT CPropertiesWnd::OnUserSelect(WPARAM wParam, LPARAM lParam)
 	return 0;
 
 }
-
-
-
 
 void CPropertiesWnd::OnTimer(UINT_PTR nIDEvent)
 {

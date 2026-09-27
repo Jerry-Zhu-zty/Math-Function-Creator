@@ -126,7 +126,13 @@ private:
     string m_sCode;
     int m_nScoopCount = 0;
     NODE* m_pHead = NULL;
-
+	CDC* m_pDC = NULL;
+	CCoordinate m_coordinate;
 public:
     void Run(const string &filename);
+    CScriptEngine(CDC* pDC, CCoordinate coordinate)
+    {
+        m_pDC = pDC;
+        m_coordinate = coordinate;
+    }
 };

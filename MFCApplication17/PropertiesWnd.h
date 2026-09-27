@@ -34,8 +34,6 @@ protected:
 	CPropertiesToolBar m_wndToolBar;
 	CMFCPropertyGridCtrl m_wndPropList;
 	CString m_currentStr;
-	CString* m_pSendStr1 = NULL;
-	CString* m_pSendStr2=NULL;
 	LPVOID m_pCurrentItem = NULL;
 	HWND m_classViewWnd = NULL;
 	int m_nCurrentType = 0;

@@ -370,8 +370,8 @@ void CMFCApplication17View::OnFileSave()
 
 void CMFCApplication17View::OnButtonrunscript()
 {
-	::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
-	CScriptEngine* pScript = new CScriptEngine();
+	//::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
+	CScriptEngine* pScript = new CScriptEngine(m_pMemoryDC, m_coordinate);
 	g_thread = thread([&pScript]() {
 		pScript->Run("src.txt");
 		});
