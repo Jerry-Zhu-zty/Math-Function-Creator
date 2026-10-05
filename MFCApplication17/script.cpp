@@ -1,5 +1,7 @@
 #pragma once
 #include "pch.h"
+#include "MFCApplication17Doc.h"
+
 bool CScriptEngine::IsOper(char c)
 {
     string str;
@@ -792,13 +794,38 @@ void CScriptEngine::Run(const string &filename)
 void CScriptEngine::LoadInfo()
 {
 	std::lock_guard<std::mutex> guard(g_mtx);
-	// Add math expressions
-    m_vArray.clear();
-	vector<string> vMathExpStr;
-	for (auto &a : g_vMathExpression)
+	// Add math expressions and variables from the active document
+	m_vArray.clear();
+
+	CMFCApplication17Doc* pDoc = nullptr;
+	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
 	{
-		vMathExpStr.push_back(a.get_expression());
+		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+		if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
 	}
+
+	// If no active document, produce empty arrays
+	vector<string> vMathExpStr;
+	vector<string> vMathSectionMin, vMathSectionMax;
+	if (pDoc)
+	{
+		for (auto &a : pDoc->GetMathExpressions())
+		{
+			vMathExpStr.push_back(a.get_expression());
+			float* sec = a.get_section();
+			if (sec)
+			{
+				vMathSectionMin.push_back(to_string(sec[0]));
+				vMathSectionMax.push_back(to_string(sec[1]));
+			}
+			else
+			{
+				vMathSectionMin.push_back(to_string(0.0f));
+				vMathSectionMax.push_back(to_string(0.0f));
+			}
+		}
+	}
+
 	ARRAYSAVETYPE arrMath;
 	arrMath.nScoop = 0;
 	arrMath.eElemType = STR;
@@ -806,130 +833,129 @@ void CScriptEngine::LoadInfo()
 	arrMath.values = vMathExpStr;
 	m_vArray.push_back(arrMath);
 
-	// Add math expression sections
-	vector<string> vMathSectionMin, vMathSectionMax;
-	for (auto &a : g_vMathExpression)
-	{
-		float* sec = a.get_section();
-		if (sec)
-		{
-			vMathSectionMin.push_back(to_string(sec[0]));
-			vMathSectionMax.push_back(to_string(sec[1]));
-		}
-		else
-		{
-			vMathSectionMin.push_back(to_string(0.0f));
-			vMathSectionMax.push_back(to_string(0.0f));
-		}
-	}
-	ARRAYSAVETYPE arrMathMin; 
-    arrMathMin.nScoop = 0; 
-    arrMathMin.eElemType = NUM; 
-    arrMathMin.sName = "math_section_min"; 
-    arrMathMin.values = vMathSectionMin; 
-    m_vArray.push_back(arrMathMin);
-	
-    ARRAYSAVETYPE arrMathMax; 
-    arrMathMax.nScoop = 0; 
-    arrMathMax.eElemType = NUM; 
-    arrMathMax.sName = "math_section_max"; 
-    arrMathMax.values = vMathSectionMax; 
-    m_vArray.push_back(arrMathMax);
+	ARRAYSAVETYPE arrMathMin;
+	arrMathMin.nScoop = 0;
+	arrMathMin.eElemType = NUM;
+	arrMathMin.sName = "math_section_min";
+	arrMathMin.values = vMathSectionMin;
+	m_vArray.push_back(arrMathMin);
 
-	// Add variables members
+	ARRAYSAVETYPE arrMathMax;
+	arrMathMax.nScoop = 0;
+	arrMathMax.eElemType = NUM;
+	arrMathMax.sName = "math_section_max";
+	arrMathMax.values = vMathSectionMax;
+	m_vArray.push_back(arrMathMax);
+
+	// Variables
 	vector<string> vVarName, vVarValue, vVarStep, vVarChange, vVarSectionMin, vVarSectionMax;
-	for (auto &v : g_vVariable)
+	if (pDoc)
 	{
-		vVarName.push_back(v.get_name());
-		vVarValue.push_back(to_string(v.get_value()));
-		vVarStep.push_back(to_string(v.get_step()));
-		vVarChange.push_back(v.is_change() ? string("1") : string("0"));
-		float* vsec = v.get_section();
-		if (vsec)
+		for (auto &v : pDoc->GetVariables())
 		{
-			vVarSectionMin.push_back(to_string(vsec[0]));
-			vVarSectionMax.push_back(to_string(vsec[1]));
-		}
-		else
-		{
-			vVarSectionMin.push_back(to_string(0.0f));
-			vVarSectionMax.push_back(to_string(0.0f));
+			vVarName.push_back(v.get_name());
+			vVarValue.push_back(to_string(v.get_value()));
+			vVarStep.push_back(to_string(v.get_step()));
+			vVarChange.push_back(v.is_change() ? string("1") : string("0"));
+			float* vsec = v.get_section();
+			if (vsec)
+			{
+				vVarSectionMin.push_back(to_string(vsec[0]));
+				vVarSectionMax.push_back(to_string(vsec[1]));
+			}
+			else
+			{
+				vVarSectionMin.push_back(to_string(0.0f));
+				vVarSectionMax.push_back(to_string(0.0f));
+			}
 		}
 	}
-	ARRAYSAVETYPE arrVarNames; 
-    arrVarNames.nScoop = 0; 
-    arrVarNames.eElemType = STR; 
-    arrVarNames.sName = "variable_name"; 
-    arrVarNames.values = vVarName; 
-    m_vArray.push_back(arrVarNames);
 
-	ARRAYSAVETYPE arrVarValues; 
-    arrVarValues.nScoop = 0; 
-    arrVarValues.eElemType = NUM; 
-    arrVarValues.sName = "variable_value"; 
-    arrVarValues.values = vVarValue; 
-    m_vArray.push_back(arrVarValues);
+	ARRAYSAVETYPE arrVarNames;
+	arrVarNames.nScoop = 0;
+	arrVarNames.eElemType = STR;
+	arrVarNames.sName = "variable_name";
+	arrVarNames.values = vVarName;
+	m_vArray.push_back(arrVarNames);
 
-	ARRAYSAVETYPE arrVarStep; 
-    arrVarStep.nScoop = 0; 
-    arrVarStep.eElemType = NUM; 
-    arrVarStep.sName = "variable_step"; 
-    arrVarStep.values = vVarStep; 
-    m_vArray.push_back(arrVarStep);
+	ARRAYSAVETYPE arrVarValues;
+	arrVarValues.nScoop = 0;
+	arrVarValues.eElemType = NUM;
+	arrVarValues.sName = "variable_value";
+	arrVarValues.values = vVarValue;
+	m_vArray.push_back(arrVarValues);
 
-	ARRAYSAVETYPE arrVarChange; 
-    arrVarChange.nScoop = 0; 
-    arrVarChange.eElemType = NUM; 
-    arrVarChange.sName = "variable_change"; 
-    arrVarChange.values = vVarChange; 
-    m_vArray.push_back(arrVarChange);
+	ARRAYSAVETYPE arrVarStep;
+	arrVarStep.nScoop = 0;
+	arrVarStep.eElemType = NUM;
+	arrVarStep.sName = "variable_step";
+	arrVarStep.values = vVarStep;
+	m_vArray.push_back(arrVarStep);
 
-	ARRAYSAVETYPE arrVarSecMin; 
-    arrVarSecMin.nScoop = 0; 
-    arrVarSecMin.eElemType = NUM; 
-    arrVarSecMin.sName = "variable_section_min"; 
-    arrVarSecMin.values = vVarSectionMin; 
-    m_vArray.push_back(arrVarSecMin);
+	ARRAYSAVETYPE arrVarChange;
+	arrVarChange.nScoop = 0;
+	arrVarChange.eElemType = NUM;
+	arrVarChange.sName = "variable_change";
+	arrVarChange.values = vVarChange;
+	m_vArray.push_back(arrVarChange);
 
-	ARRAYSAVETYPE arrVarSecMax; 
-    arrVarSecMax.nScoop = 0; 
-    arrVarSecMax.eElemType = NUM; 
-    arrVarSecMax.sName = "variable_section_max"; 
-    arrVarSecMax.values = vVarSectionMax; 
-    m_vArray.push_back(arrVarSecMax);
+	ARRAYSAVETYPE arrVarSecMin;
+	arrVarSecMin.nScoop = 0;
+	arrVarSecMin.eElemType = NUM;
+	arrVarSecMin.sName = "variable_section_min";
+	arrVarSecMin.values = vVarSectionMin;
+	m_vArray.push_back(arrVarSecMin);
+
+	ARRAYSAVETYPE arrVarSecMax;
+	arrVarSecMax.nScoop = 0;
+	arrVarSecMax.eElemType = NUM;
+	arrVarSecMax.sName = "variable_section_max";
+	arrVarSecMax.values = vVarSectionMax;
+	m_vArray.push_back(arrVarSecMax);
 }
 void CScriptEngine::UpdateInfo()
 {
 	std::lock_guard<std::mutex> guard(g_mtx);
-	// Update global math expressions and variables from m_vArray
+	// Update active document math expressions and variables from m_vArray
+	CMFCApplication17Doc* pDoc = nullptr;
+	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
+	{
+		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+		if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
+	}
+	if (!pDoc) return;
+
 	// Update math expressions
 	auto itMath = find_if(m_vArray.begin(), m_vArray.end(), [](const ARRAYSAVETYPE &a) { return a.sName == "math_exp"; });
-    if (itMath != m_vArray.end() && itMath->bModified == true)
+	if (itMath != m_vArray.end() && itMath->bModified == true)
 	{
 		size_t count = itMath->values.size();
-		g_vMathExpression.clear();
-		g_vMathExpression.reserve(count);
+		auto &docMath = pDoc->GetMathExpressions();
+		docMath.clear();
+		docMath.reserve(count);
 		for (const auto &s : itMath->values)
 		{
 			CMathExpression m;
 			m.set_expression(s);
-			g_vMathExpression.push_back(m);
+			docMath.push_back(m);
 		}
 		// update sections
 		auto itMin = find_if(m_vArray.begin(), m_vArray.end(), [](const ARRAYSAVETYPE &a) { return a.sName == "math_section_min"; });
 		auto itMax = find_if(m_vArray.begin(), m_vArray.end(), [](const ARRAYSAVETYPE &a) { return a.sName == "math_section_max"; });
 		if (itMin != m_vArray.end() && itMax != m_vArray.end())
 		{
-			size_t n = g_vMathExpression.size();
+			size_t n = docMath.size();
 			if (itMin->values.size() < n) n = itMin->values.size();
 			if (itMax->values.size() < n) n = itMax->values.size();
 			for (size_t i = 0; i < n; ++i)
 			{
 				float fmin = static_cast<float>(stof(itMin->values[i]));
 				float fmax = static_cast<float>(stof(itMax->values[i]));
-				g_vMathExpression[i].set_section(fmin, fmax);
+				docMath[i].set_section(fmin, fmax);
 			}
 		}
+
+		// After variables are updated below, register variables for each expression
 	}
 
 	// Update variables
@@ -943,32 +969,30 @@ void CScriptEngine::UpdateInfo()
 	if (itVarName != m_vArray.end())
 	{
 		size_t n = itVarName->values.size();
-		g_vVariable.clear();
-		g_vVariable.reserve(n);
+		auto &docVars = pDoc->GetVariables();
+		docVars.clear();
+		docVars.reserve(n);
 		for (size_t i = 0; i < n; ++i)
 		{
 			CVariable var;
 			var.set_name(itVarName->values[i]);
 			if (itVarValue != m_vArray.end() && i < itVarValue->values.size())
-				var.set_value(stof(itVarValue->values[i]));
+				var.set_value(static_cast<float>(stof(itVarValue->values[i])));
 			if (itVarStep != m_vArray.end() && i < itVarStep->values.size())
-				var.set_step(stof(itVarStep->values[i]));
+				var.set_step(static_cast<float>(stof(itVarStep->values[i])));
 			if (itVarChange != m_vArray.end() && i < itVarChange->values.size())
-				var.set_change(itVarChange->values[i] == "1");
-			if (itVarSecMin != m_vArray.end() && itVarSecMax != m_vArray.end() && i < itVarSecMin->values.size() && i < itVarSecMax->values.size())
-				var.set_section(stof(itVarSecMin->values[i]), stof(itVarSecMax->values[i]));
-            g_vVariable.push_back(var);
-        }
-    }
-    for (auto a : g_vMathExpression)
-    {
-        if (m_pDC != NULL)
-        {
-            a.draw_function(m_pDC, m_coordinate);
-        }
-    }
-    ::PostMessage(g_viewHwnd, WM_USER_NOTIFY, NULL, NULL);
-    ::PostMessage(g_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
-    ::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
-}
+				var.set_change(itVarChange->values[i] != "0");
+			if (itVarSecMin != m_vArray.end() && i < itVarSecMin->values.size())
+				var.set_section_min(static_cast<float>(stof(itVarSecMin->values[i])));
+			if (itVarSecMax != m_vArray.end() && i < itVarSecMax->values.size())
+				var.set_section_max(static_cast<float>(stof(itVarSecMax->values[i])));
+			docVars.push_back(var);
+		}
 
+		// After variables updated, register them in expressions
+		for (auto &exp : pDoc->GetMathExpressions())
+		{
+			exp.register_variables(pDoc->GetVariables());
+		}
+	}
+}

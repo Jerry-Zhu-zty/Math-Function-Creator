@@ -625,6 +625,7 @@ public:
 	}
 	bool register_variable(string strVarName)
 	{
+		// Legacy: search global variable list
 		for (auto& a : g_vVariable)
 		{
 			if (a.get_name() == strVarName)
@@ -638,6 +639,22 @@ public:
 			}
 		}
 		return false;
+	}
+
+	// Register variables from a provided per-document variable list (checks tokens in the expression)
+	void register_variables(vector<CVariable>& vars)
+	{
+		for (auto& a : vars)
+		{
+			if (find(m_vExpression.begin(), m_vExpression.end(), a.get_name()) != m_vExpression.end())
+			{
+				a.register_func(this);
+				if (find(m_vpVariable.begin(), m_vpVariable.end(), &a) == m_vpVariable.end())
+				{
+					m_vpVariable.push_back(&a);
+				}
+			}
+		}
 	}
 	void unregister_var(CVariable* pVar)
 	{

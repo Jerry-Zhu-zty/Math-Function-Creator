@@ -5,6 +5,7 @@
 #include "ClassView.h"
 #include "Resource.h"
 #include "MFCApplication17.h"
+#include "MFCApplication17Doc.h"
 
 class CClassViewMenuButton : public CMFCToolBarMenuButton
 {
@@ -61,7 +62,7 @@ BEGIN_MESSAGE_MAP(CClassView, CDockablePane)
 	ON_UPDATE_COMMAND_UI_RANGE(ID_SORTING_GROUPBYTYPE, ID_SORTING_SORTBYACCESS, OnUpdateSort)
 	ON_MESSAGE(WM_USER_NOTIFY, &CClassView::OnUserNotify)
 	ON_COMMAND(ID_SORTING_SORTALPHABETIC, &CClassView::OnNewFunction)
-	ON_UPDATE_COMMAND_UI(ID_NEW_VARIABLE, &CClassView::OnNewVariable)
+	ON_UPDATE_COMMAND_UI(ID_NEW_VARIABLE, &CClassView::OnUpdateButtonnewvariable)
 	ON_COMMAND(ID_BUTTONNEWVARIABLE, &CClassView::OnButtonnewvariable)
 	ON_UPDATE_COMMAND_UI(ID_BUTTONNEWVARIABLE, &CClassView::OnUpdateButtonnewvariable)
 	ON_COMMAND(ID_NEW_VARIABLE, &CClassView::OnNewVariable)
@@ -135,20 +136,29 @@ void CClassView::FillClassView()
 	m_wndClassView.SetItemState(hRoot, TVIS_BOLD, TVIS_BOLD);
 
 	HTREEITEM hClass = m_wndClassView.InsertItem(_T("Variable"), 1, 1, hRoot);
-	//m_wndClassView.InsertItem(_T("CFakeAboutDlg()"), 3, 3, hClass);
-	for (auto& a : g_vVariable)
+	// enumerate document variables
+	CMFCApplication17Doc* pDoc = nullptr;
+	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
 	{
-		m_wndClassView.InsertItem(CA2W(a.get_name().c_str()), 3, 3, hClass);
+		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+		if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
+	}
+	if (pDoc)
+	{
+		for (auto& a : pDoc->GetVariables())
+		{
+			m_wndClassView.InsertItem(CA2W(a.get_name().c_str()), 3, 3, hClass);
+		}
 	}
 	m_wndClassView.Expand(hRoot, TVE_EXPAND);
 	m_wndClassView.Expand(hClass, TVE_EXPAND);
 	hClass = m_wndClassView.InsertItem(_T("Function"), 1, 1, hRoot);
-	/*m_wndClassView.InsertItem(_T("CFakeApp()"), 3, 3, hClass);
-	m_wndClassView.InsertItem(_T("InitInstance()"), 3, 3, hClass);
-	m_wndClassView.InsertItem(_T("OnAppAbout()"), 3, 3, hClass);*/
-	for (auto& a : g_vMathExpression)
+	if (pDoc)
 	{
-		m_wndClassView.InsertItem(CA2W(a.get_expression().c_str()), 3, 3, hClass);
+		for (auto& a : pDoc->GetMathExpressions())
+		{
+			m_wndClassView.InsertItem(CA2W(a.get_expression().c_str()), 3, 3, hClass);
+		}
 	}
 	m_wndClassView.Expand(hClass, TVE_EXPAND);
 	/*hClass = m_wndClassView.InsertItem(_T("CFakeAppDoc"), 1, 1, hRoot);
@@ -285,10 +295,19 @@ void CClassView::OnClassProperties()
 
 void CClassView::OnNewFolder()
 {
-	//AfxMessageBox(_T("New Folder..."));
-	CMathExpression math;
-	math.set_expression("x");
-	g_vMathExpression.push_back(math);
+	// Add a new function to the active document
+	CMFCApplication17Doc* pDoc = nullptr;
+	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
+	{
+		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+		if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
+	}
+	if (pDoc)
+	{
+		CMathExpression math;
+		math.set_expression("x");
+		pDoc->GetMathExpressions().push_back(math);
+	}
 	m_wndClassView.DeleteAllItems();
 	FillClassView();
 }
@@ -358,38 +377,42 @@ void CClassView::OnNewFunction()
 }
 
 
-void CClassView::OnNewVariable(CCmdUI* pCmdUI)
-{
-	// TODO: Add your command update UI handler code here
-}
-
-
 void CClassView::OnButtonnewvariable()
 {
-	
-	// TODO: Add your command handler code here
+	// create a new variable in the active document
+	CMFCApplication17Doc* pDoc = nullptr;
+	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
+	{
+		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+		if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
+	}
+	if (!pDoc) return;
+
+	CVariable var;
+	var.set_name("new");
+	var.set_value(1);
+	pDoc->GetVariables().push_back(var);
+	m_wndClassView.DeleteAllItems();
+	FillClassView();
+	::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
 }
 
 
 void CClassView::OnUpdateButtonnewvariable(CCmdUI* pCmdUI)
 {
-	CVariable var;
-	var.set_name("new");
-	var.set_value(1);
-	g_vVariable.push_back(var);
-	m_wndClassView.DeleteAllItems();
-	FillClassView();
-	// TODO: Add your command update UI handler code here
+	// Enable the button when a document is active
+	bool enable = false;
+	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
+	{
+		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+		if (pChild && pChild->GetActiveDocument()) enable = true;
+	}
+	pCmdUI->Enable(enable);
 }
 
 
 void CClassView::OnNewVariable()
 {
-	CVariable var;//draft
-	var.set_name("new");
-	var.set_value(1);
-	g_vVariable.push_back(var);
-	m_wndClassView.DeleteAllItems();
-	FillClassView();
-	// TODO: Add your command handler code here
+	// Same as Button handler
+	OnButtonnewvariable();
 }

@@ -53,7 +53,6 @@ protected:
 	afx_msg LRESULT OnUserNotify(WPARAM wParam, LPARAM lParam);
 public:
 	afx_msg void OnNewFunction();
-	afx_msg void OnNewVariable(CCmdUI* pCmdUI);
 	afx_msg void OnButtonnewvariable();
 	afx_msg void OnUpdateButtonnewvariable(CCmdUI* pCmdUI);
 	afx_msg void OnNewVariable();

@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "MathExpression.h"
+#include "Variable.h"
 
 class CMFCApplication17Doc : public CDocument
 {
@@ -14,6 +16,8 @@ protected: // create from serialization only
 
 // Attributes
 public:
+	std::vector<CMathExpression>& GetMathExpressions() { return m_vMathExpression; }
+	std::vector<CVariable>& GetVariables() { return m_vVariable; }
 
 // Operations
 public:
@@ -36,6 +40,9 @@ public:
 #endif
 
 protected:
+	// Per-document storage for math expressions and variables
+	std::vector<CMathExpression> m_vMathExpression;
+	std::vector<CVariable> m_vVariable;
 
 // Generated message map functions
 protected:

@@ -43,8 +43,29 @@ BOOL CMFCApplication17Doc::OnNewDocument()
 	if (!CDocument::OnNewDocument())
 		return FALSE;
 
-	// TODO: add reinitialization code here
-	// (SDI documents will reuse this document)
+	// Initialize per-document variables and expressions
+	m_vVariable.clear();
+	m_vVariable.reserve(100);
+	CVariable var;
+	var.set_name("a"); var.set_value(1);
+	m_vVariable.push_back(var);
+	var.set_name("b"); var.set_value(1);
+	m_vVariable.push_back(var);
+
+	m_vMathExpression.clear();
+	m_vMathExpression.reserve(100);
+	CMathExpression exp;
+	std::string defaults[] = {"a*x+b"};
+	for (auto &s : defaults)
+	{
+		if (s.length())
+		{
+			exp.set_expression(s);
+			m_vMathExpression.push_back(exp);
+			// register any variables from this document that the expression uses
+			m_vMathExpression.back().register_variables(m_vVariable);
+		}
+	}
 
 	return TRUE;
 }

@@ -60,6 +60,15 @@ CMFCApplication17View::~CMFCApplication17View()
 		delete m_pMemoryDC;
 }
 
+void CMFCApplication17View::OnInitialUpdate()
+{
+	CView::OnInitialUpdate();
+	// Notify ClassView and Properties to refresh for this document
+	if (g_classViewWnd != NULL)
+		::PostMessage(g_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
+	if (g_propertiesViewWnd != NULL)
+		::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
+}
 BOOL CMFCApplication17View::PreCreateWindow(CREATESTRUCT& cs)
 {
 	// TODO: Modify the Window class or styles here by modifying
@@ -112,17 +121,21 @@ void CMFCApplication17View::OnDraw(CDC* pDC)
 		m_pMemoryDC->SelectObject(&penPoint);
 		if (g_bImplicit == false)
 		{
-			for (auto a : g_vMathExpression)
+			CMFCApplication17Doc* pDoc = GetDocument();
+			if (pDoc)
 			{
-				resPt.x = point.x;
-				if (!isnan(a.result((point.x - m_nOffsetX) * m_dZoom)))
+				for (auto &a : pDoc->GetMathExpressions())
 				{
-					resPt.y = m_nOffsetY + (-1) * (a.result((point.x - m_nOffsetX) * m_dZoom)) / m_dZoom;
-					if (!isnan((double)resPt.y) && !isinf((double)resPt.y))
+					resPt.x = point.x;
+					if (!isnan(a.result((point.x - m_nOffsetX) * m_dZoom)))
 					{
-						str.Format(L"%f,%f", (point.x - m_nOffsetX) * m_dZoom, (-1) * (resPt.y - m_nOffsetY) * m_dZoom);
-						m_pMemoryDC->TextOut(resPt.x + 20, resPt.y, str);
-						m_pMemoryDC->Ellipse(resPt.x - 5, resPt.y - 5, resPt.x + 5, resPt.y + 5);
+						resPt.y = m_nOffsetY + (-1) * (a.result((point.x - m_nOffsetX) * m_dZoom)) / m_dZoom;
+						if (!isnan((double)resPt.y) && !isinf((double)resPt.y))
+						{
+							str.Format(L"%f,%f", (point.x - m_nOffsetX) * m_dZoom, (-1) * (resPt.y - m_nOffsetY) * m_dZoom);
+							m_pMemoryDC->TextOut(resPt.x + 20, resPt.y, str);
+							m_pMemoryDC->Ellipse(resPt.x - 5, resPt.y - 5, resPt.x + 5, resPt.y + 5);
+						}
 					}
 				}
 			}
@@ -135,18 +148,23 @@ void CMFCApplication17View::OnDraw(CDC* pDC)
 	m_pMemoryDC->SelectObject(&oldPen);
 	m_pMemoryDC->SelectObject(&oldBrush);
 	//DrawFunc(m_pMemoryDC);
-	for_each(g_vMathExpression.begin(), g_vMathExpression.end(), 
-		[=](auto exp) {
-			if (g_bImplicit == false)
+	{
+		CMFCApplication17Doc* pDoc = GetDocument();
+		if (pDoc)
+		{
+			for (auto &exp : pDoc->GetMathExpressions())
 			{
-				exp.draw_function(m_pMemoryDC, m_coordinate);
-			}
-			else
-			{
-				exp.draw_implicit_function(m_pMemoryDC, m_coordinate);
+				if (g_bImplicit == false)
+				{
+					exp.draw_function(m_pMemoryDC, m_coordinate);
+				}
+				else
+				{
+					exp.draw_implicit_function(m_pMemoryDC, m_coordinate);
+				}
 			}
 		}
-	);
+	}
 	pDC->BitBlt(0, 0, rc.Width(), rc.Height(), m_pMemoryDC, 0, 0, SRCCOPY);
 	CMFCApplication17Doc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
@@ -319,17 +337,15 @@ void CMFCApplication17View::OnShowpt()
 void CMFCApplication17View::OnButtonrun()
 {
 
-	for (auto& a : g_vVariable)
+	CMFCApplication17Doc* pDoc = GetDocument();
+	if (pDoc)
 	{
-		a.set_change(true);
+		for (auto& a : pDoc->GetVariables())
+		{
+			a.set_change(true);
+		}
 	}
 	::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
-	//CScriptEngine *pScript = new CScriptEngine();
-	//g_thread = thread([&pScript]() {
-	//	pScript->Run("src.txt");
-	//	});
-	////script.Run("src.txt");
-	//g_thread.detach();
 	::PostMessage(g_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
 	// TODO: Add your command handler code here
 }
@@ -338,9 +354,13 @@ void CMFCApplication17View::OnButtonrun()
 void CMFCApplication17View::OnButtonpause()
 {
 	std::lock_guard<std::mutex> guard(g_mtx);
-	for (auto& a : g_vVariable)
+	CMFCApplication17Doc* pDoc = GetDocument();
+	if (pDoc)
 	{
-		a.set_change(false);
+		for (auto& a : pDoc->GetVariables())
+		{
+			a.set_change(false);
+		}
 	}
 	::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
 	// TODO: Add your command handler code here

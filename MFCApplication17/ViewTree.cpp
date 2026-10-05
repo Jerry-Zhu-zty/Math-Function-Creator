@@ -3,6 +3,7 @@
 #include "framework.h"
 #include "ViewTree.h"
 #include "Resource.h"
+#include "MFCApplication17Doc.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -74,28 +75,39 @@ void CViewTree::OnNMClick(NMHDR* pNMHDR, LRESULT* pResult)
 		m_pSelectStr = new CString(strText);
 		m_pSelectParentStr = new CString(GetItemText(hParentItem));
 		//SetItemState(GetSelectedItem(),0,TVIS_SELECTED);
-		if (*m_pSelectParentStr == "Function")
+		// Get active document and post pointer to the selected item from that document
+		CMFCApplication17Doc* pDoc = nullptr;
+		if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
 		{
-			std::lock_guard<std::mutex> guard(g_mtx);
-			for (auto& a : g_vMathExpression)
+			CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+			if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
+		}
+		if (pDoc)
+		{
+			if (*m_pSelectParentStr == "Function")
 			{
-				if (CA2W(a.get_expression().c_str()) == (*m_pSelectStr))
+				std::lock_guard<std::mutex> guard(g_mtx);
+				for (auto &a : pDoc->GetMathExpressions())
 				{
-					::PostMessageW(g_propertiesViewWnd, WM_USER_SELECT, (WPARAM)&a, (LPARAM)m_pSelectParentStr);
+					if (CA2W(a.get_expression().c_str()) == (*m_pSelectStr))
+					{
+						::PostMessageW(g_propertiesViewWnd, WM_USER_SELECT, (WPARAM)&a, (LPARAM)m_pSelectParentStr);
+					}
+				}
+			}
+			else if (*m_pSelectParentStr == "Variable")
+			{
+				std::lock_guard<std::mutex> guard(g_mtx);
+				for (auto &a : pDoc->GetVariables())
+				{
+					if (CA2W(a.get_name().c_str()) == (*m_pSelectStr))
+					{
+						::PostMessageW(g_propertiesViewWnd, WM_USER_SELECT, (WPARAM)&a, (LPARAM)m_pSelectParentStr);
+					}
 				}
 			}
 		}
-		else if (*m_pSelectParentStr == "Variable")
-		{
-			std::lock_guard<std::mutex> guard(g_mtx);
-			for (auto& a : g_vVariable)
-			{
-				if (CA2W(a.get_name().c_str()) == (*m_pSelectStr))
-				{
-					::PostMessageW(g_propertiesViewWnd, WM_USER_SELECT, (WPARAM)&a, (LPARAM)m_pSelectParentStr);
-				}
-			}
-		}
+
 		
 		//if (hPropertiesWnd != NULL)
 		//{

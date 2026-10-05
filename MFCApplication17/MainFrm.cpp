@@ -41,25 +41,7 @@ static UINT indicators[] =
 
 CMainFrame::CMainFrame() noexcept
 {
-	string str[30] = { /*"sin(x)","1/x","x^3",*//*"a*x/b",*/"a*x+b" };
-	CVariable var;
-	var.set_name("a");
-	var.set_value(1);
-	g_vVariable.push_back(var);
-	var.set_name("b");
-	var.set_value(1);
-	g_vVariable.push_back(var);
-	g_vVariable.reserve(100);
-	CMathExpression exp;
-	g_vMathExpression.reserve(100);
-	for (auto a : str)
-	{
-		if (a.length())
-		{
-			exp.set_expression(a);
-			g_vMathExpression.push_back(exp);
-		}
-	}
+	// No global initialization here. Each document initializes its own expressions/variables in OnNewDocument.
 }
 void CMainFrame::OnMDIActivate(BOOL bActivate, CWnd* pActivate, CWnd* pDeactivate)
 {

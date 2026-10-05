@@ -6,6 +6,7 @@
 #include "Resource.h"
 #include "MainFrm.h"
 #include "MFCApplication17.h"
+#include "MFCApplication17Doc.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -145,13 +146,22 @@ void CPropertiesWnd::OnProperties1()
 	std::lock_guard<std::mutex> guard(g_mtx);
 	CString value = m_wndPropList.GetProperty(0)->GetSubItem(0)->GetValue();
 	int index = 0;
+	{
+	CMFCApplication17Doc* pDoc = nullptr;
+	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
+	{
+		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+		if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
+	}
+	if (!pDoc) return;
+
 	if (m_nCurrentType == 0)
 	{
-		for (auto& a : g_vMathExpression)
+		for (auto& a : pDoc->GetMathExpressions())
 		{
 			if (CA2W(a.get_expression().c_str()) == value)
 			{
-				g_vMathExpression.erase(g_vMathExpression.begin() + index);
+				pDoc->GetMathExpressions().erase(pDoc->GetMathExpressions().begin() + index);
 				::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
 				break;
 			}
@@ -161,14 +171,14 @@ void CPropertiesWnd::OnProperties1()
 	}
 	else if (m_nCurrentType == 1)
 	{
-		for (auto& a : g_vVariable)
+		for (auto& a : pDoc->GetVariables())
 		{
 			if (CA2W(a.get_name().c_str()) == value)
 			{
-				g_vVariable.erase(g_vVariable.begin() + index);
-				for (auto a : g_vMathExpression)
+				pDoc->GetVariables().erase(pDoc->GetVariables().begin() + index);
+				for (auto &aa : pDoc->GetMathExpressions())
 				{
-					a.refresh();
+					aa.refresh();
 				}
 				::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
 				break;
@@ -176,6 +186,7 @@ void CPropertiesWnd::OnProperties1()
 			index++;
 		}
 	}
+}
 	// TODO: Add your command handler code here
 }
 
@@ -366,113 +377,95 @@ afx_msg LRESULT CPropertiesWnd::OnPropertyChanged(WPARAM wParam, LPARAM lParam)
 {
 	std::lock_guard<std::mutex> guard(g_mtx);
 	CMFCPropertyGridProperty* pProp = (CMFCPropertyGridProperty*)lParam;
-	if (pProp == NULL) { return NULL; }
+	if (pProp == NULL) { return 0; }
 	CString name = pProp->GetName();
 	CString value = (CString)pProp->GetValue();
 	wstring wstr = value.GetString();
-	string str(wstr.begin(),wstr.end());
-	HWND hwnd = NULL;
-	CMathExpression* pMath=NULL;
-	CVariable* pVar=NULL;
-	switch (m_nCurrentType)
-	{
-	case 0:
-		for (auto& a : g_vMathExpression)
-		{
-			if (CA2W(a.get_expression().c_str()) == m_currentStr)
-			{
-				pMath = &a;
-				break;
-			}
-		}
-		break;
-	case 1:
-		for (auto& a : g_vVariable)
-		{
-			if (CA2W(a.get_name().c_str()) == m_currentStr)
-			{
-				pVar = &a;
-				break;
-			}
-		}
-		break;
-	default:
-		break;
-	}
+	string str(wstr.begin(), wstr.end());
+
+	// Operate on the currently selected live object in the active document
+	CMathExpression* pMath = nullptr;
+	CVariable* pVar = nullptr;
+
+	if (m_pCurrentItem == nullptr) return 0;
+
 	if (m_nCurrentType == 0)
 	{
-		if (pMath != NULL)
+		pMath = reinterpret_cast<CMathExpression*>(m_pCurrentItem);
+		if (pMath == nullptr) return 0;
+
+		if (name == L"Caption")
 		{
-			if (name == L"Caption")
-			{
-				pMath->set_expression(str);
-				m_currentStr = CA2W(str.c_str());
-				::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
-			}
-			else if (name == L"Color")
-			{
-				long lcol = 0;
-				COleVariant var = pProp->GetValue();
-				try { var.ChangeType(VT_I4); lcol = var.lVal; }
-				catch (...) { lcol = 0; }
-				pMath->set_color((COLORREF)lcol);
-			}
-			else if (name == L"Left")
-			{
-				pMath->set_section_min(stof(str));
-			}
-			else if (name == L"Right")
-			{
-				pMath->set_section_max(stof(str));
-			}
-	}
+			pMath->set_expression(str);
+			m_currentStr = CA2W(str.c_str());
+			::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
+		}
+		else if (name == L"Color")
+		{
+			long lcol = 0;
+			COleVariant var = pProp->GetValue();
+			try { var.ChangeType(VT_I4); lcol = var.lVal; }
+			catch (...) { lcol = 0; }
+			pMath->set_color((COLORREF)lcol);
+		}
+		else if (name == L"Left")
+		{
+			pMath->set_section_min(stof(str));
+		}
+		else if (name == L"Right")
+		{
+			pMath->set_section_max(stof(str));
+		}
 	}
 	else if (m_nCurrentType == 1)
 	{
-		if (pVar != NULL)
+		pVar = reinterpret_cast<CVariable*>(m_pCurrentItem);
+		if (pVar == nullptr) return 0;
+
+		if (name == L"Caption")
 		{
-			if (name == L"Caption")
+			pVar->set_name(str);
+			// Refresh expressions in the active document (they may reference this variable)
+			CMFCApplication17Doc* pDoc = nullptr;
+			if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
 			{
-				pVar->set_name(str);
-				for (auto& a : g_vMathExpression)
-				{
-					a.refresh();
-				}
-				m_currentStr = value;
-				::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
+				CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+				if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
 			}
-			else if (name == L"Value")
+			if (pDoc)
 			{
-				pVar->set_value(stof(str));
+				for (auto &exp : pDoc->GetMathExpressions())
+					exp.refresh();
 			}
-			else if (name == L"Max")
-			{
-				pVar->set_section_max(stof(str));
-			}
-			else if (name == L"Min")
-			{
-				pVar->set_section_min(stof(str));
-			}
-			else if (name == L"Step")
-			{
-				pVar->set_step(stof(str));
-			}
-			else if (name == L"Action")
-			{
-				if (str == "Run")
-				{
-					pVar->set_change(true);
-				}
-				else if(str == "Pause")
-				{
-					pVar->set_change(false);
-				}
-			}
+			m_currentStr = CA2W(str.c_str());
+			::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
+		}
+		else if (name == L"Value")
+		{
+			pVar->set_value(stof(str));
+		}
+		else if (name == L"Max")
+		{
+			pVar->set_section_max(stof(str));
+		}
+		else if (name == L"Min")
+		{
+			pVar->set_section_min(stof(str));
+		}
+		else if (name == L"Step")
+		{
+			pVar->set_step(stof(str));
+		}
+		else if (name == L"Action")
+		{
+			pVar->set_change(str == "Run");
 		}
 	}
+
 	::PostMessage(g_viewHwnd, WM_USER_NOTIFY, NULL, NULL);
 	return 0;
 }
+
 
 
 
@@ -545,47 +538,57 @@ void CPropertiesWnd::OnTimer(UINT_PTR nIDEvent)
 	CMFCPropertyGridProperty* pProp = NULL;
 	if (nIDEvent == 1)
 	{
-		for (auto& a : g_vVariable)
 		{
-			if (a.is_change() == true)
+			CMFCApplication17Doc* pDoc = nullptr;
+			if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
 			{
-				if (a.get_step() > 0) {
-					if (a.get_value() < a.get_section()[1]&& a.get_value()+a.get_step()<= a.get_section()[1])
-					{
-						a.set_value(a.get_value() + a.get_step());
-					}
-					else
-					{
-						a.set_step((-1) * a.get_step());
-					}
-				}
-				else if (a.get_step() < 0)
-				{
-					if (a.get_value() > a.get_section()[0] && a.get_value() + a.get_step() >= a.get_section()[0])
-					{
-						a.set_value(a.get_value() + a.get_step());
-					}
-					else
-					{
-						a.set_step((-1) * a.get_step());
-					}
-				}
-				if (m_currentStr == CA2W(a.get_name().c_str()))
-				{
-					if (pGroup == NULL) { return; }
-					for (int i = 0; i < pGroup->GetSubItemsCount(); i++)
-					{
-						pProp = pGroup->GetSubItem(i);
-						if (pProp == NULL) { return; }
-						CString str;
-						if ((str=pProp->GetName()) == L"Value")
-						{
-							pProp->SetValue(a.get_value());
+				CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+				if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
+			}
+			if (!pDoc) return;
 
+			for (auto& a : pDoc->GetVariables())
+			{
+				if (a.is_change() == true)
+				{
+					if (a.get_step() > 0) {
+						if (a.get_value() < a.get_section()[1]&& a.get_value()+a.get_step()<= a.get_section()[1])
+						{
+							a.set_value(a.get_value() + a.get_step());
+						}
+						else
+						{
+							a.set_step((-1) * a.get_step());
 						}
 					}
+					else if (a.get_step() < 0)
+					{
+						if (a.get_value() > a.get_section()[0] && a.get_value() + a.get_step() >= a.get_section()[0])
+						{
+							a.set_value(a.get_value() + a.get_step());
+						}
+						else
+						{
+							a.set_step((-1) * a.get_step());
+						}
+					}
+					if (m_currentStr == CA2W(a.get_name().c_str()))
+					{
+						if (pGroup == NULL) { return; }
+						for (int i = 0; i < pGroup->GetSubItemsCount(); i++)
+						{
+							pProp = pGroup->GetSubItem(i);
+							if (pProp == NULL) { return; }
+							CString str;
+							if ((str=pProp->GetName()) == L"Value")
+							{
+								pProp->SetValue(a.get_value());
+
+							}
+						}
+					}
+					::PostMessage(g_viewHwnd, WM_USER_NOTIFY,NULL,NULL);
 				}
-				::PostMessage(g_viewHwnd, WM_USER_NOTIFY,NULL,NULL);
 			}
 		}
 	}
@@ -597,15 +600,23 @@ afx_msg LRESULT CPropertiesWnd::OnUserNotify(WPARAM wParam, LPARAM lParam)
 	std::lock_guard<std::mutex> guard(g_mtx);
 	CMFCPropertyGridProperty* pGroup = m_wndPropList.GetProperty(0);
 	CMFCPropertyGridProperty* pProp = NULL;
-	for (auto& a : g_vVariable)
+	CMFCApplication17Doc* pDoc = nullptr;
+	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
+	{
+		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+		if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
+	}
+	if (!pDoc) return 0;
+
+	for (auto& a : pDoc->GetVariables())
 	{
 		if (m_currentStr == CA2W(a.get_name().c_str()))
 		{
-			if (pGroup == NULL) { return NULL; }
+			if (pGroup == NULL) { return 0; }
 			for (int i = 0; i < pGroup->GetSubItemsCount(); i++)
 			{
 				pProp = pGroup->GetSubItem(i);
-				if (pProp == NULL) { return NULL; }
+				if (pProp == NULL) { return 0; }
 				CString str;
 				if ((str = pProp->GetName()) == L"Action")
 				{
@@ -619,4 +630,4 @@ afx_msg LRESULT CPropertiesWnd::OnUserNotify(WPARAM wParam, LPARAM lParam)
 		}
 	}
 	return 0;
-}
+	}
