@@ -398,6 +398,16 @@ afx_msg LRESULT CPropertiesWnd::OnPropertyChanged(WPARAM wParam, LPARAM lParam)
 		{
 			pMath->set_expression(str);
 			m_currentStr = CA2W(str.c_str());
+			CMFCApplication17Doc* pDoc = nullptr;
+			if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
+			{
+				CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
+				if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
+			}
+			if (pDoc)
+			{
+				pMath->register_variables(pDoc->GetVariables());
+			}
 			::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);
 		}
 		else if (name == L"Color")
@@ -435,7 +445,10 @@ afx_msg LRESULT CPropertiesWnd::OnPropertyChanged(WPARAM wParam, LPARAM lParam)
 			if (pDoc)
 			{
 				for (auto &exp : pDoc->GetMathExpressions())
+				{
 					exp.refresh();
+					exp.register_variables(pDoc->GetVariables());
+				}
 			}
 			m_currentStr = CA2W(str.c_str());
 			::PostMessage(m_classViewWnd, WM_USER_NOTIFY, NULL, NULL);

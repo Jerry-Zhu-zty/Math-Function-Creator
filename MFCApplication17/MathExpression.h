@@ -644,15 +644,20 @@ public:
 	// Register variables from a provided per-document variable list (checks tokens in the expression)
 	void register_variables(vector<CVariable>& vars)
 	{
+		// Unregister previous variable links
+		for (auto& vp : m_vpVariable)
+		{
+			if (vp != nullptr) vp->unregister_func(this);
+		}
+		m_vpVariable.clear();
+
+		// Register variables that appear in the parsed expression tokens
 		for (auto& a : vars)
 		{
 			if (find(m_vExpression.begin(), m_vExpression.end(), a.get_name()) != m_vExpression.end())
 			{
 				a.register_func(this);
-				if (find(m_vpVariable.begin(), m_vpVariable.end(), &a) == m_vpVariable.end())
-				{
-					m_vpVariable.push_back(&a);
-				}
+				m_vpVariable.push_back(&a);
 			}
 		}
 	}
