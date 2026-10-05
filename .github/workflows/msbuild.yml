@@ -40,5 +40,5 @@ jobs:
       - name: Upload exe
         uses: actions/upload-artifact@v4
         with:
-          name: MFC-exe
+          name: MathFunctionCreator
           path: x64/Release/*.exe
