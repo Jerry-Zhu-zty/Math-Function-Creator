@@ -2,6 +2,12 @@
 #include "pch.h"
 #include "MFCApplication17Doc.h"
 
+static void LogScriptError(const char* msg)
+{
+    ::OutputDebugStringA(msg);
+    ::OutputDebugStringA("\n");
+}
+
 bool CScriptEngine::IsOper(char c)
 {
     string str;
@@ -320,7 +326,8 @@ void CScriptEngine::StatementWrite(NODE *pNode)
         Visit(a);
         //afxDump << a->pData->sValue << endl;
         CStringA str;
-        str.Format("%s\n", a->pData->sValue.c_str());
+        if(a->pData!=NULL)
+            str.Format("%s\n", a->pData->sValue.c_str());
         //MessageBoxA(NULL, str, "Info", MB_OK);
         //afxDump << str<<"\n";
     }
@@ -618,7 +625,8 @@ void CScriptEngine::StatementArrayGet(NODE *pNode)
         }
         else
         {
-            pNode->pData = CreateVarData("Error: Array index out of bounds");
+            LogScriptError("Error: Array index out of bounds");
+            pNode->pData = nullptr;
         }
     }
     else

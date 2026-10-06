@@ -476,7 +476,7 @@ public:
 				vRes.push_back(token);
 				/*if (!register_variable(token))
 					throw runtime_error("Invalid expression");*/
-				register_variable(token);
+				//register_variable(token);
 			}
 			else if (id >= 1 && id <= 4) {
 				if (stk.empty() || identify(stk.top()) == 4 || id == 4)
@@ -623,23 +623,23 @@ public:
 		}
 		return isChanged;
 	}
-	bool register_variable(string strVarName)
-	{
-		// Legacy: search global variable list
-		for (auto& a : g_vVariable)
-		{
-			if (a.get_name() == strVarName)
-			{
-				a.register_func(this);
-				if (find(m_vpVariable.begin(), m_vpVariable.end(), &a) == m_vpVariable.end())
-				{
-					m_vpVariable.push_back(&a);
-				}
-				return true;
-			}
-		}
-		return false;
-	}
+	//bool register_variable(string strVarName)
+	//{
+	//	// Legacy: search global variable list
+	//	for (auto& a : g_vVariable)
+	//	{
+	//		if (a.get_name() == strVarName)
+	//		{
+	//			a.register_func(this);
+	//			if (find(m_vpVariable.begin(), m_vpVariable.end(), &a) == m_vpVariable.end())
+	//			{
+	//				m_vpVariable.push_back(&a);
+	//			}
+	//			return true;
+	//		}
+	//	}
+	//	return false;
+	//}
 
 	// Register variables from a provided per-document variable list (checks tokens in the expression)
 	void register_variables(vector<CVariable>& vars)

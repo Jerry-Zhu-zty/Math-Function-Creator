@@ -148,28 +148,28 @@ void CMFCApplication17View::OnDraw(CDC* pDC)
 	m_pMemoryDC->SelectObject(&oldPen);
 	m_pMemoryDC->SelectObject(&oldBrush);
 	//DrawFunc(m_pMemoryDC);
-	{
-		CMFCApplication17Doc* pDoc = GetDocument();
-		if (pDoc)
-		{
-			for (auto &exp : pDoc->GetMathExpressions())
-			{
-				if (g_bImplicit == false)
-				{
-					exp.draw_function(m_pMemoryDC, m_coordinate);
-				}
-				else
-				{
-					exp.draw_implicit_function(m_pMemoryDC, m_coordinate);
-				}
-			}
-		}
-	}
-	pDC->BitBlt(0, 0, rc.Width(), rc.Height(), m_pMemoryDC, 0, 0, SRCCOPY);
+	
 	CMFCApplication17Doc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
 		return;
+	if (pDoc)
+	{
+		for (auto& exp : pDoc->GetMathExpressions())
+		{
+			if (g_bImplicit == false)
+			{
+				exp.draw_function(m_pMemoryDC, m_coordinate);
+			}
+			else
+			{
+				exp.draw_implicit_function(m_pMemoryDC, m_coordinate);
+			}
+		}
+	}
+	
+	pDC->BitBlt(0, 0, rc.Width(), rc.Height(), m_pMemoryDC, 0, 0, SRCCOPY);
+
 
 	// TODO: add draw code for native data here
 }

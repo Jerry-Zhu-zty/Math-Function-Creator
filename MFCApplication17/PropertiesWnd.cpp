@@ -24,6 +24,10 @@ CPropertiesWnd::CPropertiesWnd() noexcept
 
 CPropertiesWnd::~CPropertiesWnd()
 {
+	if (GetSafeHwnd() != nullptr)
+	{
+		::KillTimer(this->GetSafeHwnd(), 1);
+	}
 }
 
 BEGIN_MESSAGE_MAP(CPropertiesWnd, CDockablePane)
@@ -83,7 +87,7 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	m_wndObjectCombo.AddString(_T("Application"));
-	m_wndObjectCombo.AddString(_T("Properties Window"));
+	//m_wndObjectCombo.AddString(_T("Properties Window"));
 	m_wndObjectCombo.SetCurSel(0);
 
 	CRect rectCombo;
@@ -112,7 +116,7 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndToolBar.SetRouteCommandsViaFrame(FALSE);
 
 	AdjustLayout();
-	::SetTimer(this->GetSafeHwnd(), 1, 50, NULL);
+	//::SetTimer(this->GetSafeHwnd(), 1, 50, NULL);
 	return 0;
 }
 
@@ -634,9 +638,15 @@ afx_msg LRESULT CPropertiesWnd::OnUserNotify(WPARAM wParam, LPARAM lParam)
 				if ((str = pProp->GetName()) == L"Action")
 				{
 					if (a.is_change() == true)
+					{
 						pProp->SetValue(L"Run");
+						::SetTimer(this->GetSafeHwnd(), 1, 50, NULL);
+					}
 					else if (a.is_change() == false)
+					{
 						pProp->SetValue(L"Pause");
+						::KillTimer(this->GetSafeHwnd(), 1);
+					}
 					//TODO:respond to the script message
 				}
 			}
