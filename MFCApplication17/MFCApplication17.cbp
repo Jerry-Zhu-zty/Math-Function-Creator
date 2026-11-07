@@ -156,14 +156,14 @@
 		<Unit filename="MainFrm.h" />
 		<Unit filename="MathExpression.cpp" />
 		<Unit filename="MathExpression.h" />
+		<Unit filename="OptionDlg.cpp" />
+		<Unit filename="OptionDlg.h" />
 		<Unit filename="OutputWnd.cpp" />
 		<Unit filename="OutputWnd.h" />
 		<Unit filename="PropertiesWnd.cpp" />
 		<Unit filename="PropertiesWnd.h" />
 		<Unit filename="RichEditPane.cpp" />
 		<Unit filename="RichEditPane.h" />
-		<Unit filename="Script.cpp" />
-		<Unit filename="Script.h" />
 		<Unit filename="Variable.cpp" />
 		<Unit filename="Variable.h" />
 		<Unit filename="ViewTree.cpp" />
@@ -173,6 +173,8 @@
 		<Unit filename="pch.h" />
 		<Unit filename="res/MFCApplication17.rc2" />
 		<Unit filename="resource.h" />
+		<Unit filename="script.cpp" />
+		<Unit filename="script.h" />
 		<Unit filename="targetver.h" />
 		<Extensions />
 	</Project>

@@ -12,7 +12,7 @@ typedef struct tagVarSaveType
     string sName;
     VARBASICTYPE eVarType;
     string sValue;
-    int nScoop = 0;
+    int nScope = 0;
 } VARSAVETYPE;
 
 typedef struct tagArraySaveType
@@ -20,7 +20,7 @@ typedef struct tagArraySaveType
     string sName;
     vector<string> values;   // Stored element values
     VARBASICTYPE eElemType = ANY; // Element type for the array (NUM/STR/ANY)
-    int nScoop = 0;
+    int nScope = 0;
     bool bModified = false;
 } ARRAYSAVETYPE;
 
@@ -82,7 +82,7 @@ typedef struct tagFuncSaveType
     string sName;
     vector<string> params;
     NODE *pBody = NULL;
-    int nScoop = 0;
+    int nScope = 0;
 } FUNCSAVETYPE;
 
 class CScriptEngine
@@ -96,8 +96,8 @@ private:
     int BuildTree(NODE *pNode, vector<string> vsCodeData, int nPos = 0);
     CHARTYPE CheckCharType(char c);
     CTRLTYPE CheckCtrlType(string str);
-    void BeginScoop();
-    void EndScoop();
+    void BeginScope();
+    void EndScope();
     void Visit(NODE *pNode);
     void StatementIf(NODE *pNode);
     void StatementExp(NODE *pNode);
@@ -120,19 +120,24 @@ private:
     void LoadInfo();
     void UpdateInfo();
 private:
-    vector<VARSAVETYPE> m_vVar;
-    vector<ARRAYSAVETYPE> m_vArray;
-    vector<FUNCSAVETYPE> m_vFunc;
-    string m_sCode;
-    int m_nScoopCount = 0;
-    NODE* m_pHead = NULL;
+	vector<VARSAVETYPE> m_vVar;
+	vector<ARRAYSAVETYPE> m_vArray;
+	vector<FUNCSAVETYPE> m_vFunc;
+	string m_sCode;
+	int m_nScopeCount = 0;
+	NODE* m_pHead = NULL;
 	CDC* m_pDC = NULL;
+	CDocument* m_pDoc = NULL;
 	CCoordinate m_coordinate;
 public:
-    void Run(const string &filename);
-    CScriptEngine(CDC* pDC, CCoordinate coordinate)
-    {
-        m_pDC = pDC;
-        m_coordinate = coordinate;
-    }
+	void Run(const string &filename);
+	CScriptEngine(CDC* pDC, CCoordinate coordinate, CDocument* pDoc = NULL)
+	{
+		m_pDC = pDC;
+		m_pDoc = pDoc;
+		m_coordinate = coordinate;
+		m_vArray.clear();
+		m_vVar.clear();
+		m_vFunc.clear();
+	}
 };

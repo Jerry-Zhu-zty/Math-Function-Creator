@@ -12,7 +12,7 @@ bool CScriptEngine::IsOper(char c)
 {
     string str;
     str = c;
-    for (auto a : g_sOperationList)
+    for (const auto &a : g_sOperationList)
     {
         if (a == str)
             return true;
@@ -60,7 +60,7 @@ VARSAVETYPE *CScriptEngine::CreateVarData(const string &value)
         p->eVarType = NUM;
         p->sValue = value;
     }
-    p->nScoop = m_nScoopCount;
+    p->nScope = m_nScopeCount;
     // LOGVAR(p);
     return p;
 }
@@ -254,32 +254,32 @@ CTRLTYPE CScriptEngine::CheckCtrlType(string str)
         return UNKNOWN;
 }
 
-void CScriptEngine::BeginScoop()
+void CScriptEngine::BeginScope()
 {
-    m_nScoopCount++;
+    m_nScopeCount++;
 }
-void CScriptEngine::EndScoop()
+void CScriptEngine::EndScope()
 {
     auto newEnd = remove_if(m_vVar.begin(), m_vVar.end(),
                             [&](const VARSAVETYPE &var)
-                            { return var.nScoop == m_nScoopCount; });
+                            { return var.nScope == m_nScopeCount; });
     m_vVar.erase(newEnd, m_vVar.end());
     auto newEndArr = remove_if(m_vArray.begin(), m_vArray.end(),
                                [&](const ARRAYSAVETYPE &arr)
-                               { return arr.nScoop == m_nScoopCount; });
+                               { return arr.nScope == m_nScopeCount; });
     m_vArray.erase(newEndArr, m_vArray.end());
-    m_nScoopCount--;
+    m_nScopeCount--;
 }
 void CScriptEngine::StatementProgram(NODE *pNode)
 {
-    BeginScoop();
+    BeginScope();
     // for_each(pNode->vpChild.begin(), pNode->vpChild.end(), [](NODE *pNode)
     //          { Visit(pNode); });
-    for (auto a : pNode->vpChild)
+    for (const auto &a : pNode->vpChild)
     {
         Visit(a);
     }
-    EndScoop();
+    EndScope();
 }
 
 void CScriptEngine::StatementFunction(NODE *pNode)
@@ -295,7 +295,7 @@ void CScriptEngine::StatementFunction(NODE *pNode)
     if (pParamList)
     {
         params.push_back(pParamList->sValue);
-        for (auto c : pParamList->vpChild)
+        for (const auto &c : pParamList->vpChild)
             params.push_back(c->sValue);
     }
     NODE *pBody = NULL;
@@ -310,7 +310,7 @@ void CScriptEngine::StatementFunction(NODE *pNode)
         f.sName = fname;
         f.params = params;
         f.pBody = pBody;
-        f.nScoop = m_nScoopCount;
+        f.nScope = m_nScopeCount;
         m_vFunc.push_back(f);
     }
     else
@@ -321,7 +321,7 @@ void CScriptEngine::StatementFunction(NODE *pNode)
 }
 void CScriptEngine::StatementWrite(NODE *pNode)
 {
-    for (auto a : pNode->vpChild)
+    for (const auto &a : pNode->vpChild)
     {
         Visit(a);
         //afxDump << a->pData->sValue << endl;
@@ -334,14 +334,14 @@ void CScriptEngine::StatementWrite(NODE *pNode)
 }
 void CScriptEngine::StatementWhile(NODE *pNode)
 {
-    BeginScoop();
+    BeginScope();
     Visit(pNode->vpChild[0]);
     while (stoi(pNode->vpChild[0]->pData->sValue))
     {
         Visit(pNode->vpChild[0]);
         Visit(pNode->vpChild[1]);
     }
-    EndScoop();
+    EndScope();
 }
 
 void CScriptEngine::StatementLet(NODE *pNode)
@@ -372,7 +372,7 @@ void CScriptEngine::StatementLet(NODE *pNode)
         var.sName = varName;
         var.sValue = value;
         var.eVarType = pNode->vpChild[1]->pData->eVarType; // TODO:Correct type detection(Finished)
-        var.nScoop = m_nScoopCount;
+        var.nScope = m_nScopeCount;
         m_vVar.push_back(var);
     }
     else
@@ -383,7 +383,7 @@ void CScriptEngine::StatementLet(NODE *pNode)
 
 void CScriptEngine::StatementIf(NODE *pNode)
 {
-    BeginScoop();
+    BeginScope();
     if (pNode->vpChild.size() < 2)
     {
         return;
@@ -397,7 +397,7 @@ void CScriptEngine::StatementIf(NODE *pNode)
             Visit(pNode->vpChild[1]);
         }
     }
-    EndScoop();
+    EndScope();
 }
 
 void CScriptEngine::StatementExp(NODE *pNode)
@@ -406,7 +406,7 @@ void CScriptEngine::StatementExp(NODE *pNode)
     {
         return;
     }
-    for (auto a : pNode->vpChild)
+    for (const auto &a : pNode->vpChild)
     {
         Visit(a);
     }
@@ -461,7 +461,7 @@ void CScriptEngine::StatementExp(NODE *pNode)
 
                 if (!bLeftIsNum)
                 {
-                    for (auto a : m_vVar)
+                    for (const auto &a : m_vVar)
                     {
                         if (a.sName == sLeftVal)
                         {
@@ -472,7 +472,7 @@ void CScriptEngine::StatementExp(NODE *pNode)
                 }
                 if (!bRightIsNum)
                 {
-                    for (auto a : m_vVar)
+                    for (const auto &a : m_vVar)
                     {
                         if (a.sName == sRightVal)
                         {
@@ -506,7 +506,7 @@ void CScriptEngine::StatementUnknown(NODE *pNode)
         {
             // evaluate arguments
             vector<string> argVals;
-            for (auto arg : pNode->vpChild)
+            for (const auto &arg : pNode->vpChild)
             {
                 Visit(arg);
                 if (arg->pData != NULL)
@@ -516,13 +516,13 @@ void CScriptEngine::StatementUnknown(NODE *pNode)
             }
 
             // bind parameters
-            BeginScoop();
+            BeginScope();
             for (size_t i = 0; i < it->params.size(); ++i)
             {
                 VARSAVETYPE var;
                 var.sName = it->params[i];
                 var.sValue = i < argVals.size() ? argVals[i] : string("");
-                var.nScoop = m_nScoopCount;
+                var.nScope = m_nScopeCount;
                 m_vVar.push_back(var);
             }
 
@@ -533,7 +533,7 @@ void CScriptEngine::StatementUnknown(NODE *pNode)
                 if (it->pBody->pData)
                     pNode->pData = CreateVarData(it->pBody->pData->sValue);
             }
-            EndScoop();
+            EndScope();
             return;
         }
     }
@@ -551,11 +551,11 @@ void CScriptEngine::StatementUnknown(NODE *pNode)
         //         return;
         //     }
 
-        for (auto a : m_vVar)
+        for (const auto &a : m_vVar)
         {
             if (a.sName == pNode->sValue)
             {
-                // VARSAVETYPE aCopy = a; // Create a copy to avoid dangling pointer issues
+                // VARSAVETYPE aCopy = a; 
                 // pNode->pData = &aCopy; // CreateVarData(a.sValue);
                 pNode->pData = CreateVarData(a.sValue);
                 return;
@@ -639,7 +639,7 @@ void CScriptEngine::StatementArrayNew(NODE *pNode)
     if (pNode->vpChild.empty())
         return;
     string arrayName = pNode->vpChild[0]->sValue;
-    m_vArray.push_back({arrayName, {}, ANY, m_nScoopCount});
+    m_vArray.push_back({arrayName, {}, ANY, m_nScopeCount});
 }
 void CScriptEngine::StatementArrayDel(NODE *pNode)
 {
@@ -805,17 +805,12 @@ void CScriptEngine::LoadInfo()
 	// Add math expressions and variables from the active document
 	m_vArray.clear();
 
-	CMFCApplication17Doc* pDoc = nullptr;
-	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
-	{
-		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
-		if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
-	}
+	CMFCApplication17Doc* pDoc = dynamic_cast<CMFCApplication17Doc*>(m_pDoc);
 
 	// If no active document, produce empty arrays
 	vector<string> vMathExpStr;
 	vector<string> vMathSectionMin, vMathSectionMax;
-	if (pDoc)
+    if (pDoc != NULL)
 	{
 		for (auto &a : pDoc->GetMathExpressions())
 		{
@@ -835,21 +830,21 @@ void CScriptEngine::LoadInfo()
 	}
 
 	ARRAYSAVETYPE arrMath;
-	arrMath.nScoop = 0;
+	arrMath.nScope = 0;
 	arrMath.eElemType = STR;
 	arrMath.sName = "math_exp";
 	arrMath.values = vMathExpStr;
 	m_vArray.push_back(arrMath);
 
 	ARRAYSAVETYPE arrMathMin;
-	arrMathMin.nScoop = 0;
+	arrMathMin.nScope = 0;
 	arrMathMin.eElemType = NUM;
 	arrMathMin.sName = "math_section_min";
 	arrMathMin.values = vMathSectionMin;
 	m_vArray.push_back(arrMathMin);
 
 	ARRAYSAVETYPE arrMathMax;
-	arrMathMax.nScoop = 0;
+	arrMathMax.nScope = 0;
 	arrMathMax.eElemType = NUM;
 	arrMathMax.sName = "math_section_max";
 	arrMathMax.values = vMathSectionMax;
@@ -880,42 +875,42 @@ void CScriptEngine::LoadInfo()
 	}
 
 	ARRAYSAVETYPE arrVarNames;
-	arrVarNames.nScoop = 0;
+	arrVarNames.nScope = 0;
 	arrVarNames.eElemType = STR;
 	arrVarNames.sName = "variable_name";
 	arrVarNames.values = vVarName;
 	m_vArray.push_back(arrVarNames);
 
 	ARRAYSAVETYPE arrVarValues;
-	arrVarValues.nScoop = 0;
+	arrVarValues.nScope = 0;
 	arrVarValues.eElemType = NUM;
 	arrVarValues.sName = "variable_value";
 	arrVarValues.values = vVarValue;
 	m_vArray.push_back(arrVarValues);
 
 	ARRAYSAVETYPE arrVarStep;
-	arrVarStep.nScoop = 0;
+	arrVarStep.nScope = 0;
 	arrVarStep.eElemType = NUM;
 	arrVarStep.sName = "variable_step";
 	arrVarStep.values = vVarStep;
 	m_vArray.push_back(arrVarStep);
 
 	ARRAYSAVETYPE arrVarChange;
-	arrVarChange.nScoop = 0;
+	arrVarChange.nScope = 0;
 	arrVarChange.eElemType = NUM;
 	arrVarChange.sName = "variable_change";
 	arrVarChange.values = vVarChange;
 	m_vArray.push_back(arrVarChange);
 
 	ARRAYSAVETYPE arrVarSecMin;
-	arrVarSecMin.nScoop = 0;
+	arrVarSecMin.nScope = 0;
 	arrVarSecMin.eElemType = NUM;
 	arrVarSecMin.sName = "variable_section_min";
 	arrVarSecMin.values = vVarSectionMin;
 	m_vArray.push_back(arrVarSecMin);
 
 	ARRAYSAVETYPE arrVarSecMax;
-	arrVarSecMax.nScoop = 0;
+	arrVarSecMax.nScope = 0;
 	arrVarSecMax.eElemType = NUM;
 	arrVarSecMax.sName = "variable_section_max";
 	arrVarSecMax.values = vVarSectionMax;
@@ -925,12 +920,7 @@ void CScriptEngine::UpdateInfo()
 {
 	std::lock_guard<std::mutex> guard(g_mtx);
 	// Update active document math expressions and variables from m_vArray
-	CMFCApplication17Doc* pDoc = nullptr;
-	if (AfxGetMainWnd() && AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
-	{
-		CMDIChildWnd* pChild = ((CMDIFrameWndEx*)AfxGetMainWnd())->MDIGetActive();
-		if (pChild) pDoc = (CMFCApplication17Doc*)pChild->GetActiveDocument();
-	}
+	CMFCApplication17Doc* pDoc = dynamic_cast<CMFCApplication17Doc*>(m_pDoc);
 	if (!pDoc) return;
 
 	// Update math expressions
@@ -1002,5 +992,10 @@ void CScriptEngine::UpdateInfo()
 		{
 			exp.register_variables(pDoc->GetVariables());
 		}
+	}
+
+	if (g_viewHwnd != NULL && ::IsWindow(g_viewHwnd))
+	{
+		::PostMessage(g_viewHwnd, WM_USER_NOTIFY, NULL, NULL);
 	}
 }

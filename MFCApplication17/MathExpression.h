@@ -78,13 +78,12 @@ protected:
 	vector<string> m_vExpression, m_vSolve;
 public:
 	CMathExpression() {
-		// Operator/function type mapping for fast lookup
 		m_map["+"] = 1; m_map["-"] = 1;
 		m_map["*"] = 2; m_map["/"] = 2;
 		m_map["^"] = 3;
 		m_map["("] = 4;
 		m_map[")"] = 5;
-		m_map["sin"] = 6; m_map["cos"] = 6; m_map["tan"] = 6;
+		m_map["sin"] = 6; m_map["cos"] = 6; m_map["tan"] = 6; m_map["abs"] = 6;
 		m_map["pow"] = 6; m_map["log"] = 6;
 		m_vpVariable.reserve(100);
 	}
@@ -142,7 +141,7 @@ public:
 			}
 			else if (id == 6)
 			{
-				if (token == "sin" || token == "cos" || token == "tan")
+				if (token == "sin" || token == "cos" || token == "tan" || token == "abs")
 				{
 					if (stk.empty())
 						throw runtime_error("Invalid expression");
@@ -152,8 +151,16 @@ public:
 						stk.push(Interval::sin(value));
 					else if (token == "cos")
 						stk.push(Interval::cos(value));
-					else
+					else if (token == "tan")
 						stk.push(Interval(-1, 1));
+					else if (token == "abs")
+					{
+						float a = fabs(value.lo), b = fabs(value.hi);
+						if (value.lo <= 0 && value.hi >= 0)
+							stk.push(Interval(0, max(a, b)));
+						else
+							stk.push(Interval(min(a, b), max(a, b)));
+					}
 				}
 				else
 					throw runtime_error("Unsupported interval function");
@@ -462,7 +469,7 @@ public:
 		return -1;
 	}
 
-	vector<string> solve(const vector<string>& vExpression) {
+	vector<string> solve(const vector<string>& vExpression) const {
 		stack<string> stk;
 		vector<string> vRes;
 		vRes.reserve(vExpression.size());
@@ -471,25 +478,29 @@ public:
 			if (id == 0) {
 				vRes.push_back(token);
 			}
-			else if (id == 7)
+			else if (id == 7)//variable
 			{
 				vRes.push_back(token);
 				/*if (!register_variable(token))
 					throw runtime_error("Invalid expression");*/
 				//register_variable(token);
 			}
-			else if (id >= 1 && id <= 4) {
-				if (stk.empty() || identify(stk.top()) == 4 || id == 4)
-					stk.push(token);
-				else {
+			else if (id >= 1 && id <=3) {//operators
+				//if (stk.empty() || identify(stk.top()) == 4 || id == 4)
+				//	stk.push(token);
+				/*else {*/
 					while (!stk.empty() && identify(stk.top()) != 4 && id <= identify(stk.top())) {
 						vRes.push_back(stk.top());
 						stk.pop();
 					}
 					stk.push(token);
-				}
+				/*}*/
 			}
-			else if (id == 5) {
+			else if (id == 4)//'('
+			{
+				stk.push(token);
+			}
+			else if (id == 5) {//')'
 				while (!stk.empty() && identify(stk.top()) != 4) {
 					vRes.push_back(stk.top());
 					stk.pop();
@@ -511,7 +522,7 @@ public:
 		return vRes;
 	}
 
-	float calculate(const vector<string>& vExpression){
+	float calculate(const vector<string>& vExpression) const {
 		stack<float> stk;
 		for (const auto& token : vExpression) {
 			int id = identify(token);
@@ -529,12 +540,13 @@ public:
 				else if (token == "^") stk.push(pow(a, b));
 			}
 			else if (id == 6) { // function
-				if (token == "sin" || token == "cos" || token == "tan") {
+				if (token == "sin" || token == "cos" || token == "tan" || token == "abs") {
 					if (stk.empty()) return INVALIDEXP;//throw runtime_error("Invalid expression");
 					float a = stk.top(); stk.pop();
 					if (token == "sin") stk.push(sin(a));
 					else if (token == "cos") stk.push(cos(a));
 					else if (token == "tan") stk.push(tan(a));
+					else if (token == "abs") stk.push(fabs(a));
 				}
 				else if (token == "pow" || token == "log") {
 					if (stk.size() < 2) return INVALIDEXP;//throw runtime_error("Invalid expression");
@@ -641,17 +653,14 @@ public:
 	//	return false;
 	//}
 
-	// Register variables from a provided per-document variable list (checks tokens in the expression)
 	void register_variables(vector<CVariable>& vars)
 	{
-		// Unregister previous variable links
 		for (auto& vp : m_vpVariable)
 		{
 			if (vp != nullptr) vp->unregister_func(this);
 		}
 		m_vpVariable.clear();
 
-		// Register variables that appear in the parsed expression tokens
 		for (auto& a : vars)
 		{
 			if (find(m_vExpression.begin(), m_vExpression.end(), a.get_name()) != m_vExpression.end())

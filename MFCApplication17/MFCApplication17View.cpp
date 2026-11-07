@@ -370,8 +370,8 @@ void CMFCApplication17View::OnButtonpause()
 void CMFCApplication17View::OnFileSave()
 {
 	AfxMessageBox(L"unavailable now");
-	//CString strFilter = _T("文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*||"); // 文件过滤器
-	//CFileDialog fileDlg(FALSE, _T("txt"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, strFilter); // 创建文件对话框
+	//CString strFilter = _T("Text File (*.txt)|*.txt|All files (*.*)|*.*||");
+	//CFileDialog fileDlg(FALSE, _T("txt"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, strFilter);
 	//if (fileDlg.DoModal() == IDOK)
 	//{
 	//	CString strPath = fileDlg.GetPathName();
@@ -391,8 +391,12 @@ void CMFCApplication17View::OnFileSave()
 void CMFCApplication17View::OnButtonrunscript()
 {
 	//::PostMessage(g_propertiesViewWnd, WM_USER_NOTIFY, NULL, NULL);
-	CScriptEngine* pScript = new CScriptEngine(m_pMemoryDC, m_coordinate);
-	g_thread = thread([&pScript]() {
+	CMFCApplication17Doc* pDoc = GetDocument();
+	if (pDoc == nullptr)
+		return;
+
+	std::unique_ptr<CScriptEngine> pScript(new CScriptEngine(m_pMemoryDC, m_coordinate, pDoc));
+	g_thread = thread([pScript = std::move(pScript)]() mutable {
 		pScript->Run("src.txt");
 		});
 	//script.Run("src.txt");
