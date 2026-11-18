@@ -59,4 +59,4 @@ MFCApplication17/
 ---
 
 ## 许可证
-GPL-2.0
+GPL-2.0 并附带针对 Microsoft Foundation Classes（MFC）库的链接例外

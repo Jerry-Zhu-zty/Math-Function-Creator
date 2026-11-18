@@ -65,4 +65,4 @@ MFCApplication17/
 
 ## License
 
-GPL-2.0
+GPL-2.0 with an exception for Microsoft Foundation Classes

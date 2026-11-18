@@ -1,4 +1,4 @@
-		   GNU GENERAL PUBLIC LICENSE
+		            GNU GENERAL PUBLIC LICENSE
 
                        Version 2, June 1991
 
@@ -367,3 +367,19 @@ proprietary programs.  If your program is a subroutine library, you may
 consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Library General
 Public License instead of this License.
+
+ END OF TERMS AND CONDITIONS
+
+                       ADDITIONAL PERMISSION
+        (Exception for the Microsoft Foundation Classes Library)
+
+The copyright holders of Math Function Creator grant you
+additional permission to link this program with the Microsoft
+Foundation Classes (MFC) library distributed by Microsoft
+Corporation, and to distribute the resulting executables,
+notwithstanding any provision of the GNU General Public License
+that would otherwise prohibit such linking or distribution.
+
+The MFC library itself is NOT covered by the GNU General Public
+License and remains governed solely by its own license terms.
+This exception does not grant you any rights to the MFC library.
