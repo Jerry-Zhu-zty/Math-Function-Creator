@@ -9,11 +9,18 @@ on:
       - 'v*.*.*'
   pull_request:
     branches: [ "master" ]
-  # Allow manual trigger for testing
+  # Manual trigger: type a version and run. The workflow builds first, then
+  # creates the tag AND the Release for you, so you never have to tag by hand.
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to create, e.g. v0.1.2'
+        required: true
+        type: string
 
 permissions:
-  contents: write  # Required to create a Release
+  contents: write  # Required to create the Release and its tag
+  actions: read    # Required to download build artifacts between jobs
 
 env:
   SOLUTION_FILE: MFCApplication17.sln
@@ -26,9 +33,24 @@ env:
 jobs:
   build:
     runs-on: windows-latest
+    outputs:
+      release_tag: ${{ steps.resolve_tag.outputs.tag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Decide which tag the Release will use:
+      #   - tag push -> the pushed tag name (github.ref_name)
+      #   - manual   -> the version typed in the Actions "Run workflow" form
+      - name: Resolve release tag
+        id: resolve_tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -48,14 +70,16 @@ jobs:
             ${{ env.OUTPUT_DIR }}/*.exe
             ${{ env.OUTPUT_DIR }}/*.dll
 
-  # Release step runs only when a v* tag is pushed
+  # Release runs when a v* tag is pushed OR when the workflow is run manually
   release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history, needed to generate release notes
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -67,14 +91,16 @@ jobs:
           cd artifacts
           # Ship src.txt from the source folder alongside the executables
           cp -f ../MFCApplication17/src.txt MathFunctionCreator-x64/
-          zip -r MathFunctionCreator-${{ github.ref_name }}-x64.zip MathFunctionCreator-x64/
+          zip -r MathFunctionCreator-${{ needs.build.outputs.release_tag }}-x64.zip MathFunctionCreator-x64/
           ls -la
 
       - name: Create Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: MathFunctionCreator ${{ github.ref_name }}
+          # If this tag does not exist yet, the action creates it at target_commitish
+          tag_name: ${{ needs.build.outputs.release_tag }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ needs.build.outputs.release_tag }}
           generate_release_notes: true
           files: |
             artifacts/*.zip
