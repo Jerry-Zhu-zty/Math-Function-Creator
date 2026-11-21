@@ -18,21 +18,14 @@ permissions:
 env:
   SOLUTION_FILE: MFCApplication17.sln
   BUILD_CONFIGURATION: Release
+  # Solution-level platform name in MFCApplication17.sln is "x64"
+  # (the legacy "Win32" alias is not defined in this solution, which caused MSB4126)
+  SOLUTION_PLATFORM: x64
+  OUTPUT_DIR: x64/Release
 
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        platform: [Win32, x64]
-        include:
-          - platform: Win32
-            arch_name: x86
-            output_dir: Release
-          - platform: x64
-            arch_name: x64
-            output_dir: x64/Release
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -40,20 +33,20 @@ jobs:
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build ${{ matrix.arch_name }} Release
+      - name: Build x64 Release
         run: |
           msbuild ${{ env.SOLUTION_FILE }} `
             /p:Configuration=${{ env.BUILD_CONFIGURATION }} `
-            /p:Platform=${{ matrix.platform }} `
+            /p:Platform=${{ env.SOLUTION_PLATFORM }} `
             /m /v:minimal
 
-      - name: Upload build artifacts (${{ matrix.arch_name }})
+      - name: Upload build artifacts (x64)
         uses: actions/upload-artifact@v4
         with:
-          name: MathFunctionCreator-${{ matrix.arch_name }}
+          name: MathFunctionCreator-x64
           path: |
-            ${{ matrix.output_dir }}/*.exe
-            ${{ matrix.output_dir }}/*.dll
+            ${{ env.OUTPUT_DIR }}/*.exe
+            ${{ env.OUTPUT_DIR }}/*.dll
 
   # Release step runs only when a v* tag is pushed
   release:
@@ -64,18 +57,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download all build artifacts
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Package zip archives
+      - name: Package zip archive
         run: |
           cd artifacts
           # Ship src.txt from the source folder alongside the executables
-          cp -f ../MFCApplication17/src.txt MathFunctionCreator-x86/
           cp -f ../MFCApplication17/src.txt MathFunctionCreator-x64/
-          zip -r MathFunctionCreator-${{ github.ref_name }}-x86.zip MathFunctionCreator-x86/
           zip -r MathFunctionCreator-${{ github.ref_name }}-x64.zip MathFunctionCreator-x64/
           ls -la
 
