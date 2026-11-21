@@ -4,6 +4,7 @@
 HWND g_viewHwnd = NULL;
 HWND g_classViewWnd = NULL;
 HWND g_propertiesViewWnd = NULL;
+HWND g_outputWndDebugHwnd = NULL;
 mutex g_mtx;
 thread g_thread;
 BOOL g_bImplicit = false;

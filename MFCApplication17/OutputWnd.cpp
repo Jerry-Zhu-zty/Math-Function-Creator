@@ -21,6 +21,8 @@ COutputWnd::COutputWnd() noexcept
 
 COutputWnd::~COutputWnd()
 {
+	if (g_outputWndDebugHwnd == m_wndOutputDebug.GetSafeHwnd())
+		g_outputWndDebugHwnd = NULL;
 }
 
 BEGIN_MESSAGE_MAP(COutputWnd, CDockablePane)
@@ -60,12 +62,12 @@ int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	BOOL bNameValid;
 
 	// Attach list windows to tab:
-	bNameValid = strTabName.LoadString(IDS_BUILD_TAB);
-	ASSERT(bNameValid);
-	m_wndTabs.AddTab(&m_wndOutputBuild, strTabName, (UINT)0);
 	bNameValid = strTabName.LoadString(IDS_DEBUG_TAB);
 	ASSERT(bNameValid);
-	m_wndTabs.AddTab(&m_wndOutputDebug, strTabName, (UINT)1);
+	m_wndTabs.AddTab(&m_wndOutputDebug, strTabName, (UINT)0);
+	bNameValid = strTabName.LoadString(IDS_BUILD_TAB);
+	ASSERT(bNameValid);
+	m_wndTabs.AddTab(&m_wndOutputBuild, strTabName, (UINT)1);
 	bNameValid = strTabName.LoadString(IDS_FIND_TAB);
 	ASSERT(bNameValid);
 	m_wndTabs.AddTab(&m_wndOutputFind, strTabName, (UINT)2);
@@ -73,6 +75,7 @@ int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// Fill output tabs with some dummy text (nothing magic here)
 	FillBuildWindow();
 	FillDebugWindow();
+	g_outputWndDebugHwnd = m_wndOutputDebug.GetSafeHwnd();
 	FillFindWindow();
 
 	return 0;
@@ -150,6 +153,7 @@ BEGIN_MESSAGE_MAP(COutputList, CListBox)
 	ON_COMMAND(ID_EDIT_CLEAR, OnEditClear)
 	ON_COMMAND(ID_VIEW_OUTPUTWND, OnViewOutput)
 	ON_WM_WINDOWPOSCHANGING()
+	ON_MESSAGE(WM_APP_OUTPUT_DEBUG, &COutputList::OnOutputDebug)
 END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // COutputList message handlers
@@ -173,6 +177,19 @@ void COutputList::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	}
 
 	SetFocus();
+}
+
+LRESULT COutputList::OnOutputDebug(WPARAM wParam, LPARAM)
+{
+	CString* pText = reinterpret_cast<CString*>(wParam);
+	if (pText != nullptr)
+	{
+		int nIndex = AddString(*pText);
+		if (nIndex != LB_ERR)
+			SetTopIndex(nIndex);
+		delete pText;
+	}
+	return 0;
 }
 
 void COutputList::OnEditCopy()

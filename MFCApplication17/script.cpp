@@ -8,6 +8,30 @@ static void LogScriptError(const char* msg)
     ::OutputDebugStringA("\n");
 }
 
+static void LogScriptOutput(const char* msg)
+{
+    ::OutputDebugStringA(msg);
+    ::OutputDebugStringA("\n");
+
+    if (g_outputWndDebugHwnd == NULL)
+        return;
+
+    int nChars = MultiByteToWideChar(CP_UTF8, 0, msg, -1, NULL, 0);
+    if (nChars <= 0)
+        return;
+
+    CString* pText = new CString;
+    pText->Preallocate(nChars);
+    MultiByteToWideChar(CP_UTF8, 0, msg, -1, pText->GetBuffer(nChars), nChars);
+    pText->ReleaseBuffer();
+
+    if (!::PostMessage(g_outputWndDebugHwnd, WM_APP_OUTPUT_DEBUG,
+        reinterpret_cast<WPARAM>(pText), 0))
+    {
+        delete pText;
+    }
+}
+
 bool CScriptEngine::IsOper(char c)
 {
     string str;
@@ -330,6 +354,7 @@ void CScriptEngine::StatementWrite(NODE *pNode)
             str.Format("%s\n", a->pData->sValue.c_str());
         //MessageBoxA(NULL, str, "Info", MB_OK);
         //afxDump << str<<"\n";
+		LogScriptOutput(str);
     }
 }
 void CScriptEngine::StatementWhile(NODE *pNode)
@@ -625,7 +650,7 @@ void CScriptEngine::StatementArrayGet(NODE *pNode)
         }
         else
         {
-            LogScriptError("Error: Array index out of bounds");
+            LogScriptOutput("Error: Array index out of bounds");
             pNode->pData = nullptr;
         }
     }
@@ -756,18 +781,15 @@ void CScriptEngine::Visit(NODE *pNode)
 }
 void CScriptEngine::PrintTree(NODE *pNode, int nDepth)
 {
-    //if (!pNode)
-    //    return;
+    if (pNode == nullptr)
+        return;
 
-    //for (int i = 0; i < nDepth; i++)
-        //afxDump << "  " << "\n";;
+    string sLine(nDepth * 2, ' ');
+    sLine += pNode->sValue;
+    LogScriptOutput(sLine.c_str());
 
-    //afxDump << pNode->sValue << endl;
-
-    //for (auto pChild : pNode->vpChild)
-    //{
-     //   PrintTree(pChild, nDepth + 1);
-    //}
+    for (NODE* pChild : pNode->vpChild)
+        PrintTree(pChild, nDepth + 1);
 }
 void CScriptEngine::ReadFile(string filename)
 {
@@ -785,6 +807,7 @@ void CScriptEngine::ReadFile(string filename)
 }
 void CScriptEngine::Run(const string &filename)
 {
+    LogScriptOutput("--------------");
     LoadInfo();
     ReadFile(filename);
     vector<string> vsCodeData = Slice(m_sCode);
@@ -796,7 +819,9 @@ void CScriptEngine::Run(const string &filename)
     Visit(m_pHead);
     auto end = chrono::high_resolution_clock::now();
     auto elapsed = chrono::duration_cast<chrono::nanoseconds>(end - begin);
-    TRACE("Time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
+    char sElapsed[128];
+    sprintf_s(sElapsed, "Time measured: %.3f seconds.", elapsed.count() * 1e-9);
+    LogScriptOutput(sElapsed);
     UpdateInfo();
 }
 void CScriptEngine::LoadInfo()
